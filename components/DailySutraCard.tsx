@@ -101,7 +101,7 @@ export default function DailySutraCard({ sutra }: DailySutraCardProps) {
           marginBottom: showExplanation ? "1.25rem" : "0",
         }}
       >
-        <AudioPlayer text={readText} label="聆聽" size="md" />
+        <AudioPlayer text={readText} label="聆聽" size="md" isStatic={true} />
 
         <button
           onClick={() => setShowExplanation(!showExplanation)}

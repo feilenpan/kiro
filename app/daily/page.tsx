@@ -248,7 +248,7 @@ export default function DailyPage() {
                 >
                   {item.desc}
                 </p>
-                <AudioPlayer text={item.text} label="聆聽" size="sm" />
+                <AudioPlayer text={item.text} label="聆聽" size="sm" isStatic={true} />
               </div>
             ))}
           </div>
@@ -332,6 +332,7 @@ export default function DailyPage() {
                       text={`${sutra.text}。摘自${sutra.source}。${sutra.explanation}`}
                       label="朗讀"
                       size="sm"
+                      isStatic={true}
                     />
                   </div>
                 )}

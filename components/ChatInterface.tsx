@@ -173,10 +173,10 @@ export default function ChatInterface() {
                 {msg.content}
               </div>
 
-              {/* AI 回答底部：語音播放 */}
+              {/* AI 回答底部：語音播放（動態內容，不永久緩存） */}
               {msg.role === "assistant" && (
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
-                  <AudioPlayer text={msg.content} label="聆聽回答" size="sm" />
+                  <AudioPlayer text={msg.content} label="聆聽回答" size="sm" isStatic={false} />
                 </div>
               )}
             </div>
@@ -246,7 +246,7 @@ export default function ChatInterface() {
             textAlign: "center",
           }}
         >
-          ℹ️ 目前使用示範回答，配置 OpenAI API Key 後可啟用完整 AI 功能
+          ℹ️ 目前使用示範回答，配置 MINIMAX_API_KEY 後可啟用完整 AI 功能
         </div>
       )}
 

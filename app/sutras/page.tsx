@@ -120,7 +120,7 @@ export default function SutrasPage() {
 
             {/* 語音播放 */}
             <div style={{ marginBottom: "1.5rem" }}>
-              <AudioPlayer text={selectedSutra.excerpt} label="朗誦經文" size="lg" />
+              <AudioPlayer text={selectedSutra.excerpt} label="朗誦經文" size="lg" isStatic={true} />
             </div>
 
             {/* 蓮花分隔線 */}
@@ -235,7 +235,7 @@ export default function SutrasPage() {
 
                         {/* 行內播放 */}
                         <div onClick={(e) => e.stopPropagation()}>
-                          <AudioPlayer text={sutra.excerpt} label="試聽" size="sm" />
+                          <AudioPlayer text={sutra.excerpt} label="試聽" size="sm" isStatic={true} />
                         </div>
                       </div>
 
