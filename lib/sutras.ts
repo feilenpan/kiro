@@ -1,10 +1,25 @@
-// 佛經數據庫 — 精選金句與經典段落
+/**
+ * 佛經數據庫 — 精選金句與經典段落
+ *
+ * audioUrl 欄位說明：
+ *   - 運行時由 getAudioUrl() 根據環境變量 R2_PUBLIC_URL 動態拼接
+ *   - 若 R2 未配置則返回 null，AudioPlayer 會自動降級到 /api/tts
+ *   - 固定內容由 scripts/generate-audio.ts 預生成並上傳到 R2
+ */
+
+import {
+  quoteAudioKey,
+  sutraAudioKey,
+  dailyAudioKey,
+  MORNING_KEY,
+  EVENING_KEY,
+} from "./audio-keys";
 
 export interface DailySutra {
   id: number;
-  text: string;       // 原文
-  source: string;     // 出處
-  explanation: string; // 白話解讀
+  text: string;
+  source: string;
+  explanation: string;
 }
 
 export interface SutraCategory {
@@ -24,7 +39,7 @@ export interface Sutra {
   fullText?: string;
 }
 
-// 每日金句庫（輪播）
+// ── 每日金句庫（共 10 條，按日期輪播）────────────────────────────
 export const dailySutras: DailySutra[] = [
   {
     id: 1,
@@ -88,7 +103,7 @@ export const dailySutras: DailySutra[] = [
   },
 ];
 
-// 佛經分類
+// ── 佛經分類 ──────────────────────────────────────────────────────
 export const sutraCategories: SutraCategory[] = [
   {
     id: "heart",
@@ -159,7 +174,7 @@ export const sutraCategories: SutraCategory[] = [
   },
 ];
 
-// 根據今天日期獲取每日金句
+// ── 根據日期獲取今日金句 ──────────────────────────────────────────
 export function getTodaySutra(): DailySutra {
   const today = new Date();
   const dayOfYear = Math.floor(
@@ -168,7 +183,44 @@ export function getTodaySutra(): DailySutra {
   return dailySutras[dayOfYear % dailySutras.length];
 }
 
-// 常見煩惱與佛法回應映射（輔助 AI 系統提示）
+// ── 音頻 URL 工具函數 ─────────────────────────────────────────────
+/**
+ * 根據 R2_PUBLIC_URL 環境變量拼接公開音頻 URL
+ * 返回 null 表示 R2 未配置，AudioPlayer 會自動降級
+ *
+ * 只在服務端（Server Component / API Route）調用
+ */
+export function getAudioUrl(key: string): string | null {
+  const base = process.env.R2_PUBLIC_URL;
+  if (!base) return null;
+  return `${base}/${key}`;
+}
+
+/** 今日金句音頻 URL */
+export function getDailyAudioUrl(date?: Date): string | null {
+  return getAudioUrl(dailyAudioKey(date));
+}
+
+/** 金句典藏音頻 URL */
+export function getQuoteAudioUrl(id: number): string | null {
+  return getAudioUrl(quoteAudioKey(id));
+}
+
+/** 佛經段落音頻 URL */
+export function getSutraAudioUrl(sutraId: string): string | null {
+  return getAudioUrl(sutraAudioKey(sutraId));
+}
+
+/** 早晚課音頻 URL */
+export function getMorningAudioUrl(): string | null {
+  return getAudioUrl(MORNING_KEY);
+}
+
+export function getEveningAudioUrl(): string | null {
+  return getAudioUrl(EVENING_KEY);
+}
+
+// ── 常見煩惱關鍵詞（輔助 AI System Prompt）────────────────────────
 export const troubleKeywords: Record<string, string> = {
   焦慮: "放下對未來的擔憂，活在當下",
   失眠: "心若清淨，自然安眠",

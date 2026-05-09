@@ -7,8 +7,16 @@ interface AudioPlayerProps {
   label?: string;
   size?: "sm" | "md" | "lg";
   voiceId?: string;
-  /** isStatic=true：固定內容（金句/佛經/早晚課），服務端永久緩存，節省 token */
+  /**
+   * isStatic=true：固定內容（金句/佛經/早晚課）
+   * 優先級：audioUrl > /api/tts > 瀏覽器降級
+   */
   isStatic?: boolean;
+  /**
+   * 直接傳入 R2 CDN URL，完全繞過 API，零延遲零 token
+   * 由頁面層根據 R2_PUBLIC_URL 拼接後傳入
+   */
+  audioUrl?: string | null;
 }
 
 export default function AudioPlayer({
@@ -17,13 +25,14 @@ export default function AudioPlayer({
   size     = "md",
   voiceId  = "Wise_Woman",
   isStatic = false,
+  audioUrl = null,
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused,  setIsPaused]  = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 客戶端內存緩存：同一組件內二次點擊無需重新請求
-  const audioBlobUrl = useRef<string | null>(null);
+  // 客戶端 blob URL 緩存（頁面生命週期內）
+  const blobUrlCache = useRef<string | null>(null);
   const audioEl      = useRef<HTMLAudioElement | null>(null);
 
   const sizeMap = {
@@ -36,7 +45,7 @@ export default function AudioPlayer({
   useEffect(() => {
     return () => {
       audioEl.current?.pause();
-      if (audioBlobUrl.current) URL.revokeObjectURL(audioBlobUrl.current);
+      if (blobUrlCache.current) URL.revokeObjectURL(blobUrlCache.current);
       window.speechSynthesis?.cancel();
     };
   }, []);
@@ -63,6 +72,20 @@ export default function AudioPlayer({
     setIsPlaying(true);
   };
 
+  // ── 播放一個 URL（R2 CDN 或 blob）──────────────────────────────
+  const playUrl = async (src: string) => {
+    const audio          = new Audio(src);
+    audioEl.current      = audio;
+    audio.onplay   = () => { setIsPlaying(true);  setIsLoading(false); };
+    audio.onpause  = () => { setIsPlaying(false); setIsPaused(true);   };
+    audio.onended  = () => { setIsPlaying(false); setIsPaused(false);  };
+    audio.onerror  = () => {
+      setIsPlaying(false); setIsPaused(false); setIsLoading(false);
+      playWithBrowser();
+    };
+    await audio.play();
+  };
+
   // ── 主播放邏輯 ───────────────────────────────────────────────────
   const play = async () => {
     if (isLoading) return;
@@ -79,48 +102,40 @@ export default function AudioPlayer({
     setIsLoading(true);
 
     try {
-      // 客戶端已有緩存的 blob URL → 直接重用，0 網絡請求
-      let blobUrl = audioBlobUrl.current;
-
-      if (!blobUrl) {
-        const res = await fetch("/api/tts", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text,
-            voice_id: voiceId,
-            isStatic,   // 告知服務端是否永久緩存
-          }),
-        });
-
-        const contentType = res.headers.get("Content-Type") ?? "";
-
-        // 服務端返回 JSON → fallback
-        if (!res.ok || contentType.includes("application/json")) {
-          setIsLoading(false);
-          playWithBrowser();
-          return;
-        }
-
-        const blob = await res.blob();
-        blobUrl    = URL.createObjectURL(blob);
-        // 固定內容：客戶端也緩存，頁面生命週期內不再重複請求
-        if (isStatic) audioBlobUrl.current = blobUrl;
+      // ① 最優先：直接播放 R2 CDN URL（零延遲、零 token）
+      if (audioUrl) {
+        await playUrl(audioUrl);
+        return;
       }
 
-      const audio          = new Audio(blobUrl);
-      audioEl.current      = audio;
-      audio.onplay   = () => { setIsPlaying(true);  setIsLoading(false); };
-      audio.onpause  = () => { setIsPlaying(false); setIsPaused(true);   };
-      audio.onended  = () => { setIsPlaying(false); setIsPaused(false);  };
-      audio.onerror  = () => {
-        setIsPlaying(false); setIsPaused(false); setIsLoading(false);
+      // ② 客戶端已緩存 blob → 直接重用（0 網絡請求）
+      if (blobUrlCache.current) {
+        await playUrl(blobUrlCache.current);
+        return;
+      }
+
+      // ③ 調用 /api/tts（服務端緩存 or 實時生成）
+      const res = await fetch("/api/tts", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice_id: voiceId, isStatic }),
+      });
+
+      const contentType = res.headers.get("Content-Type") ?? "";
+      if (!res.ok || contentType.includes("application/json")) {
+        // 服務端 fallback 指令 or 錯誤 → 瀏覽器降級
+        setIsLoading(false);
         playWithBrowser();
-      };
-      await audio.play();
+        return;
+      }
+
+      const blob   = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (isStatic) blobUrlCache.current = blobUrl; // 固定內容客戶端緩存
+      await playUrl(blobUrl);
 
     } catch (err) {
-      console.error("TTS play error:", err);
+      console.error("AudioPlayer error:", err);
       setIsLoading(false);
       playWithBrowser();
     }
@@ -140,7 +155,7 @@ export default function AudioPlayer({
     setIsPaused(false);
   };
 
-  const btnLabel = isLoading ? "生成中…" : isPlaying ? "暫停" : isPaused ? "繼續" : label;
+  const btnLabel = isLoading ? "載入中…" : isPlaying ? "暫停" : isPaused ? "繼續" : label;
   const btnIcon  = isLoading ? "⏳"      : isPlaying ? "⏸️"  : isPaused ? "▶️"  : "🔊";
 
   return (
