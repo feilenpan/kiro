@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 18px;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #f5f0e8;
+    color: #2c1810;
+    font-family: 'Noto Serif SC', Georgia, serif;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Noto Serif SC', Georgia, serif;
+    color: #2c1810;
+  }
+}
+
+/* 禪意卡片 */
+.zen-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201, 138, 22, 0.25);
+  border-radius: 1rem;
+  box-shadow: 0 2px 20px rgba(201, 138, 22, 0.08), 0 1px 4px rgba(44, 24, 16, 0.04);
+}
+
+/* 金色按鈕 */
+.btn-gold {
+  background: linear-gradient(to bottom, #e5ab28, #c98a16);
+  color: white;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(201, 138, 22, 0.3);
+  font-size: 1rem;
+}
+.btn-gold:hover {
+  background: linear-gradient(to bottom, #ecc24a, #e5ab28);
+  box-shadow: 0 6px 16px rgba(201, 138, 22, 0.4);
+}
+.btn-gold:active {
+  transform: scale(0.97);
+}
+.btn-gold:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 輪廓按鈕 */
+.btn-outline {
+  border: 2px solid #e5ab28;
+  color: #a06810;
+  background: transparent;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+.btn-outline:hover {
+  background: #fdf8ec;
+}
+
+/* 輸入框 */
+.zen-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #f3d88a;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #2c1810;
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 1.05rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.zen-input:focus {
+  border-color: #e5ab28;
+  box-shadow: 0 0 0 3px rgba(201, 138, 22, 0.15);
+}
+
+/* 佛典引文 */
+.sutra-quote {
+  border-left: 4px solid #e5ab28;
+  padding: 0.5rem 0 0.5rem 1rem;
+  font-style: italic;
+  color: #5c3d2e;
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+
+/* 蓮花分隔線 */
+.lotus-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+.lotus-divider::before,
+.lotus-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e4d4be, transparent);
+}
+
+/* 浮動動畫 */
+.float-gentle {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* 播放脈衝動畫 */
+.pulse-gold {
+  animation: pulseGold 2s ease-in-out infinite;
+}
+
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 138, 22, 0.4); }
+  50%       { box-shadow: 0 0 0 10px rgba(201, 138, 22, 0); }
+}
+
+/* 聊天氣泡 */
+.chat-bubble-user {
+  background: linear-gradient(135deg, #e5ab28, #c98a16);
+  color: white;
+  border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.chat-bubble-ai {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(201, 138, 22, 0.25);
+  color: #2c1810;
+  border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* 滾動條美化 */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: #f5f0e8; }
+::-webkit-scrollbar-thumb  { background: #e4d4be; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c98a16; }
+
+/* 淡入動畫 */
+.fade-in {
+  animation: fadeIn 0.4s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 打字效果光標 */
+.typing-cursor::after {
+  content: '▌';
+  color: #c98a16;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
