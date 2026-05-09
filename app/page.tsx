@@ -2,7 +2,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import ChatInterface from "@/components/ChatInterface";
-import { getTodaySutra, sutraCategories } from "@/lib/sutras";
+import { FeatureCards, SutraCategories } from "@/components/FeatureCards";
+import { getTodaySutra } from "@/lib/sutras";
 
 export default function HomePage() {
   const todaySutra = getTodaySutra();
@@ -68,81 +69,7 @@ export default function HomePage() {
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>功能介紹</span>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {[
-              {
-                icon: "🙏",
-                title: "AI 問佛",
-                desc: "說出您的煩惱，AI 法師以佛法智慧為您開示指引",
-                href: "/ask",
-                color: "#f9edcc",
-              },
-              {
-                icon: "📖",
-                title: "佛經閱覽",
-                desc: "精選心經、金剛經等經典，大字顯示，支持語音朗誦",
-                href: "/sutras",
-                color: "#f0f9ec",
-              },
-              {
-                icon: "☀️",
-                title: "每日修行",
-                desc: "每日金句、修行提醒、靜心禪語，陪伴您的日常修行",
-                href: "/daily",
-                color: "#ecf0f9",
-              },
-            ].map((card) => (
-              <Link key={card.href} href={card.href} style={{ textDecoration: "none" }}>
-                <div
-                  className="zen-card"
-                  style={{
-                    padding: "1.5rem",
-                    cursor: "pointer",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    background: card.color,
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow =
-                      "0 8px 24px rgba(201, 138, 22, 0.15)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-                    (e.currentTarget as HTMLDivElement).style.boxShadow = "";
-                  }}
-                >
-                  <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>{card.icon}</div>
-                  <h3
-                    style={{
-                      fontFamily: "'Noto Serif SC', serif",
-                      fontSize: "1.2rem",
-                      color: "#2c1810",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    {card.title}
-                  </h3>
-                  <p
-                    style={{
-                      fontFamily: "'Noto Sans SC', sans-serif",
-                      fontSize: "0.95rem",
-                      color: "#5c3d2e",
-                      lineHeight: 1.7,
-                      margin: 0,
-                    }}
-                  >
-                    {card.desc}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <FeatureCards />
         </section>
 
         {/* ── AI 快速問佛 ── */}
@@ -160,58 +87,7 @@ export default function HomePage() {
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>佛經典籍</span>
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "0.75rem",
-            }}
-          >
-            {sutraCategories.map((cat) => (
-              <Link key={cat.id} href={`/sutras#${cat.id}`} style={{ textDecoration: "none" }}>
-                <div
-                  className="zen-card"
-                  style={{
-                    padding: "1.25rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateX(4px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateX(0)";
-                  }}
-                >
-                  <span style={{ fontSize: "1.75rem" }}>{cat.icon}</span>
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: "'Noto Serif SC', serif",
-                        fontSize: "1rem",
-                        fontWeight: 600,
-                        color: "#2c1810",
-                      }}
-                    >
-                      {cat.name}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "'Noto Sans SC', sans-serif",
-                        fontSize: "0.85rem",
-                        color: "#8a5a2f",
-                      }}
-                    >
-                      {cat.description}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <SutraCategories />
         </section>
       </main>
 

@@ -35,16 +35,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "請輸入問題" }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.MINIMAX_API_KEY;
     if (!apiKey) {
-      // 無 API Key 時返回示範回答
       return NextResponse.json({
         reply: getMockReply(message),
         isMock: true,
       });
     }
 
-    const openai = new OpenAI({ apiKey });
+    // MiniMax 兼容 OpenAI SDK，只需修改 baseURL
+    const client = new OpenAI({
+      apiKey,
+      baseURL: "https://api.minimax.io/v1",
+    });
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
@@ -53,16 +56,16 @@ export async function POST(request: NextRequest) {
       { role: "user", content: message },
     ];
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await client.chat.completions.create({
+      model: "MiniMax-Text-01",
       messages,
-      max_tokens: 500,
+      max_tokens: 600,
       temperature: 0.7,
     });
 
     const reply = completion.choices[0]?.message?.content || "阿彌陀佛，請再試一次。";
-
     return NextResponse.json({ reply, isMock: false });
+
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
@@ -111,19 +114,18 @@ function getMockReply(message: string): string {
 
 《地藏菩薩本願經》教導我們：一切眾生皆有佛性，家人亦是我們修行的良師益友。與家人的摩擦，正是磨練慈悲心與耐心的機會。
 
-建議每日早晨，在心中為家人默默祝福：「願ＸＸ身體健康，心想事成。」這種善意的發送，不僅能改善關係，也能淨化自己的心靈。
+建議每日早晨，在心中為家人默默祝福：「願您身體健康，心想事成。」這種善意的發送，不僅能改善關係，也能淨化自己的心靈。
 
 家是道場，家人是菩薩。願您的家庭和合圓滿。阿彌陀佛。🙏`;
   }
 
-  // 預設回答
   return `善信，感謝您來到「佛說」。
 
 《心經》有云：「照見五蘊皆空，度一切苦厄。」生命中的種種困惑與苦惱，都有其深刻的因緣。佛法不是逃避現實，而是教我們以智慧面對一切。
 
 您所提的問題，貧僧建議從以下三點思考：
 一、放下執著 — 萬事皆有因緣聚散
-二、活在當下 — 此刻的心念最為珍貴  
+二、活在當下 — 此刻的心念最為珍貴
 三、廣結善緣 — 以慈悲心待人處事
 
 若有更具體的煩惱，歡迎詳細說明，貧僧願為您細細解說。願您法喜充滿，吉祥如意。阿彌陀佛。🙏`;
