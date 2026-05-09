@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import AudioPlayer from "@/components/AudioPlayer";
 import { dailySutras, DailySutra } from "@/lib/sutras";
+import { track, events } from "@/lib/analytics";
 
 // ── 禪修計時器 ────────────────────────────────────────────────────
 function MeditationTimer() {
@@ -18,11 +19,13 @@ function MeditationTimer() {
     const secs = duration * 60;
     setTimeLeft(secs);
     setIsRunning(true);
+    track(events.MEDITATE_START, { duration });
     const id = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(id);
           setIsRunning(false);
+          track(events.MEDITATE_DONE, { duration });
           if (window.speechSynthesis) {
             const u = new SpeechSynthesisUtterance("禪修結束，阿彌陀佛。");
             u.lang = "zh-TW";
@@ -161,7 +164,15 @@ export default function DailyPageClient({
                 <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "0.9rem", color: "#8a5a2f", marginBottom: "0.75rem" }}>
                   {item.desc}
                 </p>
-                <AudioPlayer text={item.text} label="聆聽" size="sm" isStatic={true} audioUrl={item.url} />
+                <AudioPlayer
+                  text={item.text}
+                  label="聆聽"
+                  size="sm"
+                  isStatic={true}
+                  audioUrl={item.url}
+                  trackEvent={events.LISTEN_COURSE}
+                  trackProps={{ course: item.title.includes("早") ? "morning" : "evening" }}
+                />
               </div>
             ))}
           </div>
@@ -190,7 +201,11 @@ export default function DailyPageClient({
                   border: selectedIdx === idx ? "2px solid #e5ab28" : "1px solid rgba(201,138,22,0.25)",
                   transition: "all 0.2s",
                 }}
-                onClick={() => setSelectedIdx(selectedIdx === idx ? -1 : idx)}
+                onClick={() => {
+                  const newIdx = selectedIdx === idx ? -1 : idx;
+                  setSelectedIdx(newIdx);
+                  if (newIdx !== -1) track(events.VIEW_QUOTE, { sutraId: sutra.id });
+                }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
                   <p style={{ fontFamily: "'Noto Serif SC', serif", fontSize: "1rem", color: "#2c1810", lineHeight: 1.8, margin: 0, flex: 1 }}>
@@ -213,6 +228,8 @@ export default function DailyPageClient({
                       size="sm"
                       isStatic={true}
                       audioUrl={quoteAudios[idx] ?? null}
+                      trackEvent={events.LISTEN_QUOTE}
+                      trackProps={{ sutraId: sutra.id }}
                     />
                   </div>
                 )}

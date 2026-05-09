@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AudioPlayer from "./AudioPlayer";
 import { DailySutra } from "@/lib/sutras";
+import { track, events } from "@/lib/analytics";
 
 interface DailySutraCardProps {
   sutra: DailySutra;
@@ -76,9 +77,14 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
           size="md"
           isStatic={true}
           audioUrl={audioUrl}
+          trackEvent={events.LISTEN_DAILY}
+          trackProps={{ sutraId: sutra.id }}
         />
         <button
-          onClick={() => setShowExplanation(!showExplanation)}
+          onClick={() => {
+            setShowExplanation(!showExplanation);
+            if (!showExplanation) track(events.VIEW_DAILY, { sutraId: sutra.id, action: "expand" });
+          }}
           className="btn-outline"
           style={{ minWidth: "80px" }}
         >

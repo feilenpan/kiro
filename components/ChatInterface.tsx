@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import AudioPlayer from "./AudioPlayer";
+import { track, events } from "@/lib/analytics";
 
 interface Message {
   role: "user" | "assistant";
@@ -38,6 +39,12 @@ export default function ChatInterface() {
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
+
+    // 埋點：用戶發起 AI 問佛（核心價值指標）
+    track(events.ASK_AI, {
+      length:  text.trim().length,
+      round:   messages.length / 2, // 第幾輪對話
+    });
 
     try {
       const res = await fetch("/api/chat", {
@@ -176,7 +183,13 @@ export default function ChatInterface() {
               {/* AI 回答底部：語音播放（動態內容，不永久緩存） */}
               {msg.role === "assistant" && (
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
-                  <AudioPlayer text={msg.content} label="聆聽回答" size="sm" isStatic={false} />
+                  <AudioPlayer
+                    text={msg.content}
+                    label="聆聽回答"
+                    size="sm"
+                    isStatic={false}
+                    trackEvent={events.LISTEN_AI}
+                  />
                 </div>
               )}
             </div>

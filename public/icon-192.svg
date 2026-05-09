@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fdf8ec"/>
+      <stop offset="70%" stop-color="#f3d88a"/>
+      <stop offset="100%" stop-color="#c98a16"/>
+    </radialGradient>
+    <linearGradient id="text" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a2d0e"/>
+      <stop offset="100%" stop-color="#2c1810"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <!-- 外圓裝飾 -->
+  <circle cx="96" cy="96" r="78" fill="none" stroke="#2c1810" stroke-width="1.5" stroke-opacity="0.25"/>
+  <circle cx="96" cy="96" r="70" fill="none" stroke="#2c1810" stroke-width="1" stroke-opacity="0.15"/>
+  <!-- 佛字 -->
+  <text x="96" y="132" font-family="'Noto Serif SC', serif" font-size="110" font-weight="700"
+        fill="url(#text)" text-anchor="middle" letter-spacing="-2">佛</text>
+  <!-- 蓮花底座 -->
+  <text x="96" y="170" font-size="16" text-anchor="middle" opacity="0.7">🪷</text>
+</svg>

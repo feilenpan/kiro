@@ -4,6 +4,7 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import AudioPlayer from "@/components/AudioPlayer";
 import { sutraCategories, Sutra } from "@/lib/sutras";
+import { track, events } from "@/lib/analytics";
 
 interface Props {
   /** 服務端傳入的 R2 URL，key = sutra.id */
@@ -34,7 +35,7 @@ export default function SutrasPageClient({ sutraAudios }: Props) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "0.5rem", marginBottom: "1.25rem" }}>
           <span style={{ fontSize: "0.9rem", color: "#8a5a2f", fontFamily: "'Noto Sans SC', sans-serif" }}>字體大小：</span>
           {[16, 20, 24, 28].map((sz) => (
-            <button key={sz} onClick={() => setFontSize(sz)} style={{
+            <button key={sz} onClick={() => { setFontSize(sz); track(events.FONT_RESIZE, { size: sz }); }} style={{
               padding: "0.35rem 0.75rem", borderRadius: "0.5rem",
               border: fontSize === sz ? "2px solid #e5ab28" : "1px solid #e4d4be",
               background: fontSize === sz ? "#f9edcc" : "white",
@@ -69,6 +70,8 @@ export default function SutrasPageClient({ sutraAudios }: Props) {
                 size="lg"
                 isStatic={true}
                 audioUrl={sutraAudios[selectedSutra.id] ?? null}
+                trackEvent={events.LISTEN_SUTRA}
+                trackProps={{ sutraId: selectedSutra.id, view: "detail" }}
               />
             </div>
 
@@ -100,7 +103,7 @@ export default function SutrasPageClient({ sutraAudios }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   {cat.sutras.map((sutra) => (
                     <div key={sutra.id} className="zen-card" style={{ padding: "1.5rem", cursor: "pointer" }}
-                      onClick={() => setSelectedSutra(sutra)}
+                      onClick={() => { setSelectedSutra(sutra); track(events.VIEW_SUTRA, { sutraId: sutra.id }); }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
                         <div>
@@ -118,6 +121,8 @@ export default function SutrasPageClient({ sutraAudios }: Props) {
                             size="sm"
                             isStatic={true}
                             audioUrl={sutraAudios[sutra.id] ?? null}
+                            trackEvent={events.LISTEN_SUTRA}
+                            trackProps={{ sutraId: sutra.id, view: "list" }}
                           />
                         </div>
                       </div>

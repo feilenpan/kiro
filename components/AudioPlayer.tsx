@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { track, EventName } from "@/lib/analytics";
 
 interface AudioPlayerProps {
   text: string;
@@ -17,15 +18,21 @@ interface AudioPlayerProps {
    * 由頁面層根據 R2_PUBLIC_URL 拼接後傳入
    */
   audioUrl?: string | null;
+  /** 埋點事件名稱，用於追蹤用戶點擊了哪類朗讀 */
+  trackEvent?: EventName;
+  /** 埋點附帶屬性 */
+  trackProps?: Record<string, string | number | boolean | null>;
 }
 
 export default function AudioPlayer({
   text,
-  label    = "朗讀",
-  size     = "md",
-  voiceId  = "Wise_Woman",
-  isStatic = false,
-  audioUrl = null,
+  label      = "朗讀",
+  size       = "md",
+  voiceId    = "Wise_Woman",
+  isStatic   = false,
+  audioUrl   = null,
+  trackEvent,
+  trackProps,
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused,  setIsPaused]  = useState(false);
@@ -100,6 +107,11 @@ export default function AudioPlayer({
 
     stopAll();
     setIsLoading(true);
+
+    // 上報埋點（僅在用戶主動觸發時）
+    if (trackEvent) {
+      track(trackEvent, { ...(trackProps ?? {}), source: audioUrl ? "cdn" : "api" });
+    }
 
     try {
       // ① 最優先：直接播放 R2 CDN URL（零延遲、零 token）
