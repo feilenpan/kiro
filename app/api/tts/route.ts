@@ -5,11 +5,14 @@ import { createHash } from "crypto";
 // 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
 const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
 
+// speech-2.8-hd 支持的 voice_id 列表
+// 參考：https://platform.minimax.io/docs/api-reference/voice-management-get
 const VOICES = [
-  { id: "Calm_Woman", name: "沉穩女聲（寧靜平和）", gender: "female", default: true  },
-  { id: "Wise_Woman", name: "智慧女聲（溫柔莊重）", gender: "female", default: false },
-  { id: "Gentle_Man", name: "溫潤男聲（低沉穩健）", gender: "male",   default: false },
-  { id: "Calm_Man",   name: "沉靜男聲（莊重深遠）", gender: "male",   default: false },
+  { id: "female-shaonv",  name: "少女音（清澈寧靜）",   gender: "female", default: true  },
+  { id: "female-yujie",   name: "御姐音（沉穩大氣）",   gender: "female", default: false },
+  { id: "female-tianmei", name: "甜美音（溫柔親切）",   gender: "female", default: false },
+  { id: "male-qinchen",   name: "青沉音（低沉穩重）",   gender: "male",   default: false },
+  { id: "male-jingying",  name: "精英音（莊重有力）",   gender: "male",   default: false },
 ];
 
 // ── 服務端音頻緩存 ────────────────────────────────────────────────
@@ -54,20 +57,20 @@ async function callMiniMaxTTS(
   apiKey: string
 ): Promise<Buffer | null> {
   const body = {
-    model: "speech-02-hd",
+    model: "speech-2.8-hd",   // 正確模型名稱（非 speech-02-hd）
     text,
     voice_setting: {
       voice_id,
-      speed:  0.88,   // 比正常稍慢，讓字字清晰、有停頓感
+      speed:  0.88,  // 稍慢，字字清晰，有停頓感
       vol:    1.0,
-      pitch:  -2,     // 輕微降調，聲音更沉穩溫厚
+      pitch:  0,     // speech-2.8-hd 自帶情感韻律，無需強制降調
     },
-    audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3" },
-    // 語氣提示：讓模型以平靜、有情緒起伏的方式朗讀，
-    // 避免機械式平讀；適合佛經、冥想、心靈內容
-    pronunciation_dict: [],
-    stream:  false,
-    language_boost: "zh",
+    audio_setting: {
+      sample_rate: 32000,
+      bitrate:     128000,
+      format:      "mp3",
+      channel:     1,
+    },
   };
 
   const res = await fetch(MINIMAX_TTS_URL, {
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       text,
-      voice_id = "Calm_Woman",
+      voice_id = "female-shaonv",
       // isStatic=true：固定內容（金句/佛經），永久緩存，節省 token
       // isStatic=false（預設）：動態 AI 回答，緩存 1 小時
       isStatic = false,

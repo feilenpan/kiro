@@ -28,7 +28,7 @@ export default function AudioPlayer({
   text,
   label      = "朗讀",
   size       = "md",
-  voiceId    = "Calm_Woman",
+  voiceId    = "female-shaonv",
   isStatic   = false,
   audioUrl   = null,
   trackEvent,

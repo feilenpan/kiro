@@ -26,11 +26,10 @@ async function callTTS(text: string, apiKey: string): Promise<Buffer | null> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "speech-02-hd",
+      model: "speech-2.8-hd",   // 正確模型名稱
       text: text.slice(0, 500),
-      voice_setting: { voice_id: "Calm_Woman", speed: 0.88, vol: 1.0, pitch: -2 },
-      audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3" },
-      language_boost: "zh",
+      voice_setting: { voice_id: "female-shaonv", speed: 0.88, vol: 1.0, pitch: 0 },
+      audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 },
     }),
   });
 

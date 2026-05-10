@@ -24,15 +24,16 @@ import {
 // ── MiniMax TTS ───────────────────────────────────────────────────
 // 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
 const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
-const VOICE_ID = "Calm_Woman";
+const VOICE_ID = "female-shaonv";  // speech-2.8-hd 支持的 voice_id
 
 /**
  * TTS 語氣設定說明：
+ *   model  speech-2.8-hd — Token Plan 支持的正確模型名
  *   speed  0.88  — 稍慢，字字清晰，適合佛經朗誦
- *   pitch  -2    — 輕微降調，聲音更沉穩溫厚
+ *   pitch  0     — speech-2.8-hd 自帶情感韻律，無需強制降調
  *   vol    1.0   — 標準音量
  */
-const VOICE_SETTING = { voice_id: VOICE_ID, speed: 0.88, vol: 1.0, pitch: -2 };
+const VOICE_SETTING = { voice_id: VOICE_ID, speed: 0.88, vol: 1.0, pitch: 0 };
 
 async function tts(text: string): Promise<Buffer | null> {
   const apiKey = process.env.MINIMAX_API_KEY;
@@ -42,11 +43,10 @@ async function tts(text: string): Promise<Buffer | null> {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "speech-02-hd",
+      model: "speech-2.8-hd",   // 正確模型名稱
       text: text.slice(0, 500),
       voice_setting: VOICE_SETTING,
-      audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3" },
-      language_boost: "zh",
+      audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 },
     }),
   });
 
