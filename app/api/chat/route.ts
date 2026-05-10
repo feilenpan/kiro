@@ -57,14 +57,21 @@ export async function POST(request: NextRequest) {
     ];
 
     const completion = await client.chat.completions.create({
-      model: "MiniMax-M2.7",
+      model: "MiniMax-M2.5",  // M2.5 性價比更高，同樣支持繁體中文
       messages,
       max_tokens: 600,
       temperature: 0.7,
     });
 
-    const reply = completion.choices[0]?.message?.content || "阿彌陀佛，請再試一次。";
-    return NextResponse.json({ reply, isMock: false });
+    const raw = completion.choices[0]?.message?.content || "阿彌陀佛，請再試一次。";
+
+    // 過濾推理模型輸出的 <think>...</think> 標籤（用戶不應看到思考過程）
+    const reply = raw
+      .replace(/<think>[\s\S]*?<\/think>/gi, "")  // 移除完整 think 塊
+      .replace(/<think>[\s\S]*/gi, "")             // 移除未閉合的 think
+      .trim();
+
+    return NextResponse.json({ reply: reply || "阿彌陀佛，請再試一次。", isMock: false });
 
   } catch (error) {
     console.error("Chat API error:", error);
