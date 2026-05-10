@@ -43,6 +43,18 @@ async function callTTS(text: string, apiKey: string): Promise<Buffer | null> {
   return hex ? Buffer.from(hex, "hex") : null;
 }
 
+// R2 環境變量診斷（供排查用）
+function diagnoseR2(): Record<string, string> {
+  return {
+    R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID ? "✅ 已設置" : "❌ 未設置",
+    R2_ACCESS_KEY: process.env.R2_ACCESS_KEY ? "✅ 已設置" : "❌ 未設置",
+    R2_SECRET_KEY: process.env.R2_SECRET_KEY ? "✅ 已設置" : "❌ 未設置",
+    R2_BUCKET:     process.env.R2_BUCKET     || "❌ 未設置",
+    R2_PUBLIC_URL: process.env.R2_PUBLIC_URL || "❌ 未設置",
+    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY ? "✅ 已設置" : "❌ 未設置",
+  };
+}
+
 export async function GET(request: NextRequest) {
   // ── 安全驗證 ───────────────────────────────────────────────────
   const secret = request.headers.get("x-cron-secret")
@@ -85,13 +97,18 @@ export async function GET(request: NextRequest) {
   console.log(`[Cron] 生成今日金句: ${sutra.text.slice(0, 20)}…`);
   const audio = await callTTS(text, apiKey);
   if (!audio) {
-    return NextResponse.json({ ok: false, error: "TTS 生成失敗" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "TTS 生成失敗", diagnose: diagnoseR2() }, { status: 500 });
   }
 
   // ── 上傳 R2 ───────────────────────────────────────────────────
   const url = await uploadAudio(key, audio);
   if (!url) {
-    return NextResponse.json({ ok: false, error: "R2 上傳失敗" }, { status: 500 });
+    return NextResponse.json({
+      ok: false,
+      error: "R2 上傳失敗",
+      diagnose: diagnoseR2(),
+      hint: "請確認 Vercel 環境變量 R2_ACCOUNT_ID / R2_ACCESS_KEY / R2_SECRET_KEY / R2_BUCKET / R2_PUBLIC_URL 均已填寫並重新部署",
+    }, { status: 500 });
   }
 
   console.log(`[Cron] ✅ 今日金句音頻已就緒: ${url}`);
