@@ -15,7 +15,8 @@ import { uploadAudio, checkExists } from "@/lib/r2";
 import { dailyAudioKey } from "@/lib/audio-keys";
 import { dailySutras } from "@/lib/sutras";
 
-const MINIMAX_TTS_URL = "https://api.minimax.io/v1/t2a_v2";
+// 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
+const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
 
 async function callTTS(text: string, apiKey: string): Promise<Buffer | null> {
   const res = await fetch(MINIMAX_TTS_URL, {

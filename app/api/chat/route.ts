@@ -43,10 +43,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // MiniMax 兼容 OpenAI SDK，只需修改 baseURL
+    // MiniMax Token Plan 端點：api.minimaxi.com（注意不是 api.minimax.io）
     const client = new OpenAI({
       apiKey,
-      baseURL: "https://api.minimax.io/v1",
+      baseURL: "https://api.minimaxi.com/v1",
     });
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const completion = await client.chat.completions.create({
-      model: "MiniMax-Text-01",
+      model: "MiniMax-M2.7",
       messages,
       max_tokens: 600,
       temperature: 0.7,

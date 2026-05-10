@@ -22,7 +22,8 @@ import {
 } from "../lib/audio-keys";
 
 // ── MiniMax TTS ───────────────────────────────────────────────────
-const MINIMAX_TTS_URL = "https://api.minimax.io/v1/t2a_v2";
+// 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
+const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
 const VOICE_ID = "Calm_Woman";
 
 /**

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
 
 // ── MiniMax T2A 語音合成 API ──────────────────────────────────────
-const MINIMAX_TTS_URL = "https://api.minimax.io/v1/t2a_v2";
+// 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
+const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
 
 const VOICES = [
   { id: "Calm_Woman", name: "沉穩女聲（寧靜平和）", gender: "female", default: true  },
