@@ -23,7 +23,15 @@ import {
 
 // ── MiniMax TTS ───────────────────────────────────────────────────
 const MINIMAX_TTS_URL = "https://api.minimax.io/v1/t2a_v2";
-const VOICE_ID = "Wise_Woman";
+const VOICE_ID = "Calm_Woman";
+
+/**
+ * TTS 語氣設定說明：
+ *   speed  0.88  — 稍慢，字字清晰，適合佛經朗誦
+ *   pitch  -2    — 輕微降調，聲音更沉穩溫厚
+ *   vol    1.0   — 標準音量
+ */
+const VOICE_SETTING = { voice_id: VOICE_ID, speed: 0.88, vol: 1.0, pitch: -2 };
 
 async function tts(text: string): Promise<Buffer | null> {
   const apiKey = process.env.MINIMAX_API_KEY;
@@ -35,8 +43,9 @@ async function tts(text: string): Promise<Buffer | null> {
     body: JSON.stringify({
       model: "speech-02-hd",
       text: text.slice(0, 500),
-      voice_setting: { voice_id: VOICE_ID, speed: 0.85, vol: 1.0, pitch: 0 },
+      voice_setting: VOICE_SETTING,
       audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3" },
+      language_boost: "zh",
     }),
   });
 

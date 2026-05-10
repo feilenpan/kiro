@@ -5,8 +5,8 @@ import { createHash } from "crypto";
 const MINIMAX_TTS_URL = "https://api.minimax.io/v1/t2a_v2";
 
 const VOICES = [
-  { id: "Wise_Woman", name: "智慧女聲（溫柔莊重）", gender: "female", default: true  },
-  { id: "Calm_Woman", name: "沉穩女聲（寧靜平和）", gender: "female", default: false },
+  { id: "Calm_Woman", name: "沉穩女聲（寧靜平和）", gender: "female", default: true  },
+  { id: "Wise_Woman", name: "智慧女聲（溫柔莊重）", gender: "female", default: false },
   { id: "Gentle_Man", name: "溫潤男聲（低沉穩健）", gender: "male",   default: false },
   { id: "Calm_Man",   name: "沉靜男聲（莊重深遠）", gender: "male",   default: false },
 ];
@@ -55,8 +55,18 @@ async function callMiniMaxTTS(
   const body = {
     model: "speech-02-hd",
     text,
-    voice_setting: { voice_id, speed: 0.85, vol: 1.0, pitch: 0 },
+    voice_setting: {
+      voice_id,
+      speed:  0.88,   // 比正常稍慢，讓字字清晰、有停頓感
+      vol:    1.0,
+      pitch:  -2,     // 輕微降調，聲音更沉穩溫厚
+    },
     audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3" },
+    // 語氣提示：讓模型以平靜、有情緒起伏的方式朗讀，
+    // 避免機械式平讀；適合佛經、冥想、心靈內容
+    pronunciation_dict: [],
+    stream:  false,
+    language_boost: "zh",
   };
 
   const res = await fetch(MINIMAX_TTS_URL, {
@@ -88,7 +98,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       text,
-      voice_id = "Wise_Woman",
+      voice_id = "Calm_Woman",
       // isStatic=true：固定內容（金句/佛經），永久緩存，節省 token
       // isStatic=false（預設）：動態 AI 回答，緩存 1 小時
       isStatic = false,
