@@ -152,7 +152,7 @@ export default function DailyPageClient({
           <div className="lotus-divider">
             <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>早晚課誦</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
             {[
               { title: "🌅 早課祝福", text: morningText, desc: "以清淨心迎接新一天", url: morningAudio },
               { title: "🌙 晚課迴向", text: eveningText, desc: "回顧今日，安然入眠",  url: eveningAudio },

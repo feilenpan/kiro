@@ -19,7 +19,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
   return (
     <div
       className="zen-card"
-      style={{ padding: "2rem", textAlign: "center", position: "relative", overflow: "hidden" }}
+      style={{ padding: "clamp(1.25rem, 4vw, 2rem)", textAlign: "center", position: "relative", overflow: "hidden" }}
     >
       {/* 背景裝飾 */}
       <div
@@ -47,8 +47,9 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
 
       {/* 金句正文 */}
       <blockquote style={{
-        fontFamily: "'Noto Serif SC', serif", fontSize: "1.25rem",
-        lineHeight: 2, color: "#2c1810", margin: "0 0 1rem 0", fontWeight: 500,
+        fontFamily: "'Noto Serif SC', serif",
+        fontSize: "clamp(1rem, 4vw, 1.25rem)",
+        lineHeight: 1.9, color: "#2c1810", margin: "0 0 1rem 0", fontWeight: 500,
       }}>
         「{sutra.text}」
       </blockquote>

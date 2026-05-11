@@ -39,7 +39,7 @@ export default function AskPage() {
         </div>
 
         {/* 對話主體 */}
-        <div className="zen-card" style={{ padding: "1.75rem", minHeight: "520px" }}>
+        <div className="zen-card" style={{ padding: "1rem", minHeight: "clamp(380px, 60vh, 520px)" }}>
           <ChatInterface />
         </div>
 
