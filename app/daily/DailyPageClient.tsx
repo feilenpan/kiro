@@ -125,6 +125,7 @@ export default function DailyPageClient({
 
   const morningText = "清晨时分，万物初醒。愿您以清净心迎接新的一天。南无阿弥陀佛。";
   const eveningText = "日暮时分，尘嚣渐息。回顾今日，若有过失，轻轻放下，明日再来。南无阿弥陀佛。";
+  // 注意：此文字须与 cron/route.ts 中 MORNING_TEXT / EVENING_TEXT 保持一致
 
   return (
     <>
