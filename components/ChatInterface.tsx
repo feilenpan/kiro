@@ -138,8 +138,8 @@ export default function ChatInterface() {
           flexDirection: "column",
           gap: "1rem",
           paddingBottom: "1rem",
-          minHeight: "200px",
-          maxHeight: "420px",
+          minHeight: "160px",
+          maxHeight: "clamp(280px, 45vh, 420px)",
         }}
       >
         {messages.map((msg, idx) => (
@@ -263,26 +263,36 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* 輸入區域 */}
-      <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-end" }}>
+      {/* 輸入區域 — 手機垂直排列，桌面橫排 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
         <textarea
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="請說出您的煩惱或問題… (Enter 發送)"
-          rows={2}
+          placeholder="請說出您的煩惱或問題…"
+          rows={3}
           className="zen-input"
-          style={{ resize: "none", lineHeight: 1.6 }}
+          style={{
+            resize: "none",
+            lineHeight: 1.7,
+            fontSize: "1rem",
+            minHeight: "80px",
+          }}
           disabled={isLoading}
         />
         <button
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || isLoading}
           className="btn-gold"
-          style={{ whiteSpace: "nowrap", padding: "0.75rem 1.25rem", flexShrink: 0 }}
+          style={{
+            width: "100%",
+            padding: "0.85rem 1rem",
+            fontSize: "1.05rem",
+            letterSpacing: "0.05em",
+          }}
         >
-          {isLoading ? "⏳" : "🙏 問佛"}
+          {isLoading ? "⏳ 法師思考中…" : "🙏 問佛"}
         </button>
       </div>
     </div>
