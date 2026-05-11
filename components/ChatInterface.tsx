@@ -263,8 +263,8 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* 輸入區域 — 手機垂直排列，桌面橫排 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
+      {/* 輸入區域 — 手機垂直排列 */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem", overflow: "hidden" }}>
         <textarea
           ref={inputRef}
           value={input}
@@ -278,6 +278,8 @@ export default function ChatInterface() {
             lineHeight: 1.7,
             fontSize: "1rem",
             minHeight: "80px",
+            width: "100%",
+            boxSizing: "border-box",
           }}
           disabled={isLoading}
         />
@@ -290,6 +292,7 @@ export default function ChatInterface() {
             padding: "0.85rem 1rem",
             fontSize: "1.05rem",
             letterSpacing: "0.05em",
+            boxSizing: "border-box",
           }}
         >
           {isLoading ? "⏳ 法師思考中…" : "🙏 問佛"}

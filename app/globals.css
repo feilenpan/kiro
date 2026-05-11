@@ -81,6 +81,7 @@
 /* 輸入框 */
 .zen-input {
   width: 100%;
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.8);
   border: 2px solid #f3d88a;
   border-radius: 0.75rem;
