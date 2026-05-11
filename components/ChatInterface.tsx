@@ -10,12 +10,12 @@ interface Message {
 }
 
 const SUGGESTED_QUESTIONS = [
-  "我最近很焦慮，怎麼辦？",
-  "如何讓心靜下來？",
-  "《心經》是什麼意思？",
-  "失眠應該如何調整？",
-  "如何與家人和睦相處？",
-  "什麼是念佛？",
+  "我最近很焦虑，怎么办？",
+  "如何让心静下来？",
+  "《心经》是什么意思？",
+  "失眠应该如何调整？",
+  "如何与家人和睦相处？",
+  "什么是念佛？",
 ];
 
 export default function ChatInterface() {
@@ -62,7 +62,7 @@ export default function ChatInterface() {
     } catch {
       setMessages([
         ...newMessages,
-        { role: "assistant", content: "阿彌陀佛，網絡不通暢，請稍後再試。🙏" },
+        { role: "assistant", content: "阿弥陀佛，网络不通畅，请稍后再试。🙏" },
       ]);
     } finally {
       setIsLoading(false);
@@ -90,7 +90,7 @@ export default function ChatInterface() {
               textAlign: "center",
             }}
           >
-            🙏 您有什麼想請教的？
+            🙏 您有什么想请教的？
           </p>
           <div
             style={{
@@ -183,7 +183,7 @@ export default function ChatInterface() {
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
                   <AudioPlayer
                     text={msg.content}
-                    label="聆聽回答"
+                    label="聆听回答"
                     size="sm"
                     isStatic={false}
                     trackEvent={events.LISTEN_AI}
@@ -234,7 +234,7 @@ export default function ChatInterface() {
                   fontFamily: "'Noto Sans SC', sans-serif",
                 }}
               >
-                法師正在思考…
+                法师正在思考…
               </span>
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function ChatInterface() {
             textAlign: "center",
           }}
         >
-          ℹ️ 目前使用示範回答，配置 MINIMAX_API_KEY 後可啟用完整 AI 功能
+          ℹ️ 目前使用示范回答，配置 MINIMAX_API_KEY 后可启用完整 AI 功能
         </div>
       )}
 
@@ -268,7 +268,7 @@ export default function ChatInterface() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="請說出您的煩惱或問題…"
+          placeholder="请说出您的烦恼或问题…"
           rows={2}
           className="zen-input"
           style={{
@@ -292,7 +292,7 @@ export default function ChatInterface() {
             boxSizing: "border-box",
           }}
         >
-          {isLoading ? "⏳ 法師思考中…" : "🙏 問佛"}
+          {isLoading ? "⏳ 法师思考中…" : "🙏 问佛"}
         </button>
       </div>
     </div>

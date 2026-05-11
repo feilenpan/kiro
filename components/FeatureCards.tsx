@@ -6,22 +6,22 @@ import { sutraCategories } from "@/lib/sutras";
 const features = [
   {
     icon: "🙏",
-    title: "AI 問佛",
-    desc: "說出您的煩惱，AI 法師以佛法智慧為您開示指引",
+    title: "AI 问佛",
+    desc: "说出您的烦恼，AI 法师以佛法智慧为您开示指引",
     href: "/ask",
     bg: "#f9edcc",
   },
   {
     icon: "📖",
-    title: "佛經閱覽",
-    desc: "精選心經、金剛經等經典，大字顯示，支持語音朗誦",
+    title: "佛经阅览",
+    desc: "精选心经、金刚经等经典，大字显示，支持语音朗诵",
     href: "/sutras",
     bg: "#f0f9ec",
   },
   {
     icon: "☀️",
     title: "每日修行",
-    desc: "每日金句、修行提醒、靜心禪語，陪伴您的日常修行",
+    desc: "每日金句、修行提醒、静心禅语，陪伴您的日常修行",
     href: "/daily",
     bg: "#ecf0f9",
   },

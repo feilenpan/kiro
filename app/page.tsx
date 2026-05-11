@@ -29,18 +29,18 @@ export default function HomePage() {
             fontSize: "clamp(0.95rem, 3vw, 1.1rem)",
             color: "#8a5a2f", lineHeight: 1.8, maxWidth: "480px", margin: "0 auto 1.5rem",
           }}>
-            以 AI 之力，弘揚佛法智慧<br />
-            每日金句 · 問佛解惑 · 佛經朗誦
+            以 AI 之力，弘扬佛法智慧<br />
+            每日金句 · 问佛解惑 · 佛经朗诵
           </p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/ask">
               <button className="btn-gold" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
-                🙏 向AI問佛
+                🙏 向AI问佛
               </button>
             </Link>
             <Link href="/sutras">
               <button className="btn-outline" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
-                📖 瀏覽佛經
+                📖 浏览佛经
               </button>
             </Link>
           </div>
@@ -54,7 +54,7 @@ export default function HomePage() {
         {/* 功能介紹 */}
         <section style={{ marginBottom: "2.5rem" }}>
           <div className="lotus-divider">
-            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>功能介紹</span>
+            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>功能介绍</span>
           </div>
           <FeatureCards />
         </section>
@@ -62,7 +62,7 @@ export default function HomePage() {
         {/* 快速問佛 */}
         <section style={{ marginBottom: "2.5rem" }}>
           <div className="lotus-divider">
-            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>快速問佛</span>
+            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>快速问佛</span>
           </div>
           <div className="zen-card" style={{ padding: "clamp(1rem, 3vw, 1.75rem)" }}>
             <ChatInterface />
@@ -72,7 +72,7 @@ export default function HomePage() {
         {/* 佛經典籍分類 */}
         <section>
           <div className="lotus-divider">
-            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>佛經典籍</span>
+            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>佛经典籍</span>
           </div>
           <SutraCategories />
         </section>
@@ -83,10 +83,10 @@ export default function HomePage() {
         padding: "1.5rem 1.25rem", textAlign: "center",
       }}>
         <p style={{ fontFamily: "'Noto Serif SC', serif", fontSize: "1rem", color: "#a06810", marginBottom: "0.5rem" }}>
-          🙏 願一切眾生離苦得樂 · 阿彌陀佛
+          🙏 愿一切众生离苦得乐 · 阿弥陀佛
         </p>
         <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "0.8rem", color: "#bc8f5e" }}>
-          本站 AI 回答僅供佛法學習參考，非正式佛法開示
+          本站 AI 回答仅供佛法学习参考，非正式佛法开示
         </p>
       </footer>
     </>
