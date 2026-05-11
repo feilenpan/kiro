@@ -18,6 +18,14 @@
     background-color: #f5f0e8;
     color: #2c1810;
     font-family: 'Noto Serif SC', Georgia, serif;
+    /* 防止任何子元素橫向溢出撐破頁面 */
+    overflow-x: hidden;
+  }
+
+  /* 確保所有元素不橫向溢出 */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    max-width: 100%;
   }
 
   h1, h2, h3, h4 {

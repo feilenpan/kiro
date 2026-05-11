@@ -10,18 +10,18 @@ export default function AskPage() {
   return (
     <>
       <Header />
-      <main style={{ maxWidth: "760px", margin: "0 auto", padding: "2rem 1.25rem 4rem" }}>
+      <main style={{ maxWidth: "760px", margin: "0 auto", padding: "1rem 1rem 2rem" }}>
 
         {/* 頁頭 */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>🙏</div>
+        <div style={{ textAlign: "center", marginBottom: "1rem" }}>
+          <div style={{ fontSize: "2.2rem", marginBottom: "0.4rem" }}>🙏</div>
           <h1
             style={{
               fontFamily: "'Noto Serif SC', serif",
-              fontSize: "1.8rem",
+              fontSize: "1.5rem",
               fontWeight: 700,
               color: "#2c1810",
-              marginBottom: "0.5rem",
+              marginBottom: "0.3rem",
             }}
           >
             問佛
@@ -29,17 +29,17 @@ export default function AskPage() {
           <p
             style={{
               fontFamily: "'Noto Sans SC', sans-serif",
-              fontSize: "1rem",
+              fontSize: "0.9rem",
               color: "#8a5a2f",
-              lineHeight: 1.7,
+              lineHeight: 1.6,
             }}
           >
             說出您的煩惱或問題，AI 法師將以佛法智慧為您開示
           </p>
         </div>
 
-        {/* 對話主體 */}
-        <div className="zen-card" style={{ padding: "1rem", minHeight: "clamp(380px, 60vh, 520px)" }}>
+        {/* 對話主體 — 不設固定高度，讓內容自然撐開 */}
+        <div className="zen-card" style={{ padding: "1rem" }}>
           <ChatInterface />
         </div>
 

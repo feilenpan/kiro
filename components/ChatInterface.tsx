@@ -77,7 +77,7 @@ export default function ChatInterface() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
       {/* 建議問題（首次顯示） */}
       {messages.length === 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
@@ -132,14 +132,12 @@ export default function ChatInterface() {
       {/* 對話列表 */}
       <div
         style={{
-          flex: 1,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
           gap: "1rem",
-          paddingBottom: "1rem",
-          minHeight: "160px",
-          maxHeight: "clamp(280px, 45vh, 420px)",
+          paddingBottom: "0.5rem",
+          maxHeight: "50vh",
         }}
       >
         {messages.map((msg, idx) => (
@@ -264,20 +262,19 @@ export default function ChatInterface() {
       )}
 
       {/* 輸入區域 — 手機垂直排列 */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem", overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
         <textarea
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="請說出您的煩惱或問題…"
-          rows={3}
+          rows={2}
           className="zen-input"
           style={{
             resize: "none",
             lineHeight: 1.7,
             fontSize: "1rem",
-            minHeight: "80px",
             width: "100%",
             boxSizing: "border-box",
           }}
