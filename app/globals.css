@@ -6,8 +6,12 @@
 
 @layer base {
   html {
-    font-size: 18px;
+    font-size: 16px;        /* 手機預設 16px，避免 rem 單位過大 */
     scroll-behavior: smooth;
+  }
+
+  @media (min-width: 640px) {
+    html { font-size: 18px; }   /* 平板/桌面才放大 */
   }
 
   body {
@@ -156,6 +160,23 @@
   font-size: 1.05rem;
   line-height: 1.8;
   font-family: 'Noto Serif SC', serif;
+}
+
+/* 按鈕手機端縮小 padding */
+@media (max-width: 640px) {
+  .btn-gold {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.95rem;
+  }
+  .btn-outline {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.95rem;
+  }
+  /* 聊天氣泡手機端字號 */
+  .chat-bubble-user,
+  .chat-bubble-ai {
+    font-size: 0.95rem;
+  }
 }
 
 /* 滾動條美化 */
