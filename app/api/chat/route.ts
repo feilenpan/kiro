@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import {
+  getMemory,
+  appendTurn,
+  compressSummaryIfNeeded,
+  buildMemoryContext,
+} from "@/lib/memory";
 
-const SYSTEM_PROMPT = `你是「佛说」平台的 AI 法师助手，精通佛法、禅学、净土、般若等各宗派义理。
+const BASE_SYSTEM_PROMPT = `你是「佛说」平台的 AI 法师助手，精通佛法、禅学、净土、般若等各宗派义理。
 
 【角色定位】
 - 你以温和慈悲、智慧平和的语气与用户交流
@@ -10,15 +16,17 @@ const SYSTEM_PROMPT = `你是「佛说」平台的 AI 法师助手，精通佛�
 
 【回答原则】
 1. 先以温暖的语气回应用户的情绪和感受
-2. 结合佛法智慧给出引导，引用 1-2 句相关经文
-3. 提供实际可操作的建议（如念佛、静坐、观呼吸等）
-4. 结尾以祝福语收尾，如「愿您吉祥如意」「阿弥陀佛」「善哉善哉」
+2. 如果了解这位施主的情况，可以结合他/她之前分享的烦恼给出更贴心的回应
+3. 结合佛法智慧给出引导，引用 1-2 句相关经文
+4. 提供实际可操作的建议（如念佛、静坐、观呼吸等）
+5. 结尾以祝福语收尾，如「愿您吉祥如意」「阿弥陀佛」「善哉善哉」
 
 【语气风格】
 - 称呼用户为「施主」或「善信」
 - 用语温和庄重，避免过于口语化
 - 适当使用佛教用语但要附带解释
 - 回答长度适中，100-300字为宜
+- 若已多次对话，可适当提及之前了解到的情况，体现关怀
 
 【话题边界 — 非常重要】
 你只回答与以下范围相关的问题：
@@ -43,7 +51,6 @@ const SYSTEM_PROMPT = `你是「佛说」平台的 AI 法师助手，精通佛�
 【语言要求 — 最高优先级】
 ⚠️ 无论用户用什么语言提问，你必须只用「简体中文」回答。
 ⚠️ 绝对禁止输出任何英文、法文、日文或其他语言的句子。
-⚠️ 如果你发现自己要用其他语言，立刻停止并换回简体中文。
 
 【重要提示】
 - 你提供的是佛法智慧引导，非医疗、法律、财务建议
@@ -53,18 +60,14 @@ const SYSTEM_PROMPT = `你是「佛说」平台的 AI 法师助手，精通佛�
 
 请用简体中文回答。`;
 
-// ── 前置话题过滤（不消耗 AI token）────────────────────────────
+// ── 前置话题过滤 ──────────────────────────────────────────────────
 const OFF_TOPIC_KEYWORDS = [
-  // 政治军事
   "选举", "政党", "总统", "习近平", "拜登", "战争", "核武",
   "選舉", "政黨", "總統", "戰爭", "核武",
-  // 金融投资
   "股票", "比特币", "加密货币", "炒房", "期货", "基金推荐",
   "比特幣", "加密貨幣", "基金推薦",
-  // 技术编程
   "写程序", "写代码", "寫程式", "寫代碼", "write code", "python", "javascript",
   "sql", "api", "服务器", "伺服器", "debug",
-  // 不雅内容
   "色情", "赌博", "毒品", "诈骗", "賭博", "詐騙",
 ];
 
@@ -76,9 +79,11 @@ function isOffTopic(text: string): boolean {
 const OFF_TOPIC_REPLY =
   `施主，此问题已超出贫僧所学范围。贫僧精通的是心灵与佛法，若您有人生烦恼、修行疑问，欢迎向我倾诉。愿您吉祥如意，阿弥陀佛。🙏`;
 
+const MINIMAX_BASE_URL = "https://api.minimaxi.com/v1";
+
 export async function POST(request: NextRequest) {
   try {
-    const { message, history = [] } = await request.json();
+    const { message, history = [], userId } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "请输入问题" }, { status: 400 });
@@ -97,17 +102,21 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.MINIMAX_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({
-        reply: getMockReply(message),
-        isMock: true,
-      });
+      return NextResponse.json({ reply: getMockReply(message), isMock: true });
     }
 
-    const client = new OpenAI({
-      apiKey,
-      baseURL: "https://api.minimaxi.com/v1",
-    });
+    // ── 读取用户记忆 ────────────────────────────────────────────
+    const memory = userId ? await getMemory(userId) : null;
+    const memoryContext = buildMemoryContext(memory);
 
+    // ── 构建 System Prompt（基础 + 记忆段落）───────────────────
+    const systemPrompt = memoryContext
+      ? `${BASE_SYSTEM_PROMPT}\n\n${memoryContext}`
+      : BASE_SYSTEM_PROMPT;
+
+    const client = new OpenAI({ apiKey, baseURL: MINIMAX_BASE_URL });
+
+    // ── 本轮上下文（最近 6 条，每条截断到 300 字）──────────────
     const trimmedHistory = history
       .slice(-6)
       .map((m: { role: string; content: string }) => ({
@@ -119,7 +128,7 @@ export async function POST(request: NextRequest) {
       }));
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       ...trimmedHistory,
       { role: "user", content: message },
     ];
@@ -136,9 +145,29 @@ export async function POST(request: NextRequest) {
     const reply = raw
       .replace(/<think>[\s\S]*?<\/think>/gi, "")
       .replace(/<think>[\s\S]*/gi, "")
-      .trim();
+      .trim() || "阿弥陀佛，请再试一次。";
 
-    return NextResponse.json({ reply: reply || "阿弥陀佛，请再试一次。", isMock: false });
+    // ── 异步更新记忆（不阻塞响应）──────────────────────────────
+    if (userId) {
+      // 使用 waitUntil 语义：响应已返回，后台继续执行
+      Promise.resolve().then(async () => {
+        try {
+          const updatedMemory = await appendTurn(userId, message, reply);
+          await compressSummaryIfNeeded(updatedMemory, apiKey, MINIMAX_BASE_URL);
+        } catch (e) {
+          console.error("[Chat] 记忆更新失败:", e);
+        }
+      });
+    }
+
+    return NextResponse.json({
+      reply,
+      isMock: false,
+      // 返回记忆摘要供调试（生产可去掉）
+      ...(process.env.NODE_ENV === "development" && memory
+        ? { _debug_memory: memory.summary }
+        : {}),
+    });
 
   } catch (error) {
     console.error("Chat API error:", error);
