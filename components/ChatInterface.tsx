@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import AudioPlayer from "./AudioPlayer";
 import { track, events } from "@/lib/analytics";
 
@@ -18,20 +18,53 @@ const SUGGESTED_QUESTIONS = [
   "什么是念佛？",
 ];
 
-export default function ChatInterface() {
-  const [messages,    setMessages]    = useState<Message[]>([]);
-  const [input,       setInput]       = useState("");
-  const [isLoading,   setIsLoading]   = useState(false);
-  const [isMock,      setIsMock]      = useState(false);
-  const bottomRef   = useRef<HTMLDivElement>(null);
-  const inputRef    = useRef<HTMLTextAreaElement>(null);
+const USER_ID_KEY = "foshuoUserId";
 
-  // 自動滾動到底部
+// ── 获取或生成用户匿名 ID ────────────────────────────────────────
+async function getOrCreateUserId(): Promise<string> {
+  // 先从 localStorage 读取
+  const stored = localStorage.getItem(USER_ID_KEY);
+  if (stored) return stored;
+
+  // 首次访问：从服务端生成一个 UUID
+  try {
+    const res = await fetch("/api/user-id");
+    const data = await res.json();
+    const userId: string = data.userId;
+    localStorage.setItem(USER_ID_KEY, userId);
+    return userId;
+  } catch {
+    // 降级：本地生成（不依赖服务端）
+    const fallback = crypto.randomUUID();
+    localStorage.setItem(USER_ID_KEY, fallback);
+    return fallback;
+  }
+}
+
+export default function ChatInterface() {
+  const [messages,  setMessages]  = useState<Message[]>([]);
+  const [input,     setInput]     = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMock,    setIsMock]    = useState(false);
+  const [hasMemory, setHasMemory] = useState(false); // 是否已有记忆
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef  = useRef<HTMLTextAreaElement>(null);
+  const userIdRef = useRef<string | null>(null);
+
+  // 组件挂载时初始化 userId
+  useEffect(() => {
+    getOrCreateUserId().then((id) => {
+      userIdRef.current = id;
+    });
+  }, []);
+
+  // 自动滚动到底部
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: text.trim() };
@@ -40,10 +73,9 @@ export default function ChatInterface() {
     setInput("");
     setIsLoading(true);
 
-    // 埋點：用戶發起 AI 問佛（核心價值指標）
     track(events.ASK_AI, {
-      length:  text.trim().length,
-      round:   messages.length / 2, // 第幾輪對話
+      length: text.trim().length,
+      round:  messages.length / 2,
     });
 
     try {
@@ -53,11 +85,13 @@ export default function ChatInterface() {
         body: JSON.stringify({
           message: text.trim(),
           history: messages.map((m) => ({ role: m.role, content: m.content })),
+          userId:  userIdRef.current,   // ← 携带用户 ID
         }),
       });
 
       const data = await res.json();
       setIsMock(data.isMock);
+      setHasMemory(true); // 至少有一轮对话后标记有记忆
       setMessages([...newMessages, { role: "assistant", content: data.reply }]);
     } catch {
       setMessages([
@@ -67,7 +101,7 @@ export default function ChatInterface() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [messages, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -78,7 +112,30 @@ export default function ChatInterface() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      {/* 建議問題（首次顯示） */}
+
+      {/* 记忆提示（有过对话才显示）*/}
+      {hasMemory && (
+        <div
+          className="fade-in"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            padding: "0.4rem 0.75rem",
+            background: "rgba(229, 171, 40, 0.1)",
+            borderRadius: "0.5rem",
+            fontSize: "0.8rem",
+            color: "#a06810",
+            fontFamily: "'Noto Sans SC', sans-serif",
+            marginBottom: "0.75rem",
+          }}
+        >
+          <span>🧠</span>
+          <span>法师已记住您的情况，下次对话将延续关怀</span>
+        </div>
+      )}
+
+      {/* 建议问题（首次显示）*/}
       {messages.length === 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
           <p
@@ -129,7 +186,7 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* 對話列表 */}
+      {/* 对话列表 */}
       <div
         style={{
           overflowY: "auto",
@@ -151,7 +208,6 @@ export default function ChatInterface() {
               alignItems: "flex-end",
             }}
           >
-            {/* AI 頭像 */}
             {msg.role === "assistant" && (
               <div
                 style={{
@@ -178,7 +234,6 @@ export default function ChatInterface() {
                 {msg.content}
               </div>
 
-              {/* AI 回答底部：語音播放（動態內容，不永久緩存） */}
               {msg.role === "assistant" && (
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
                   <AudioPlayer
@@ -194,7 +249,7 @@ export default function ChatInterface() {
           </div>
         ))}
 
-        {/* 載入動畫 */}
+        {/* 加载动画 */}
         {isLoading && (
           <div className="fade-in" style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
             <div
@@ -243,7 +298,7 @@ export default function ChatInterface() {
         <div ref={bottomRef} />
       </div>
 
-      {/* 模擬回答提示 */}
+      {/* 模拟回答提示 */}
       {isMock && (
         <div
           style={{
@@ -261,7 +316,7 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* 輸入區域 — 手機垂直排列 */}
+      {/* 输入区域 */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
         <textarea
           ref={inputRef}
