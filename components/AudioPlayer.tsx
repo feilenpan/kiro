@@ -62,14 +62,14 @@ export default function AudioPlayer({
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u    = new SpeechSynthesisUtterance(text);
-    u.lang     = "zh-TW";
+    u.lang     = "zh-CN";
     u.rate     = 0.85;
     u.pitch    = 1.0;
     u.volume   = 1.0;
     const vs   = window.speechSynthesis.getVoices();
     const best = vs.find((v) =>
       v.lang.startsWith("zh") &&
-      (v.name.includes("Female") || v.name.includes("Hsiao") || v.name.includes("Xiaoxiao"))
+      (v.name.includes("Xiaoxiao") || v.name.includes("Xiaoyi") || v.name.includes("Female"))
     ) ?? vs.find((v) => v.lang.startsWith("zh"));
     if (best) u.voice = best;
     u.onstart = () => { setIsPlaying(true);  setIsLoading(false); };
