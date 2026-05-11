@@ -10,9 +10,9 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/",        label: "首頁",   icon: "🏠" },
-  { href: "/ask",     label: "問佛",   icon: "🙏" },
-  { href: "/sutras",  label: "佛經",   icon: "📖" },
+  { href: "/",        label: "首页",   icon: "🏠" },
+  { href: "/ask",     label: "问佛",   icon: "🙏" },
+  { href: "/sutras",  label: "佛经",   icon: "📖" },
   { href: "/daily",   label: "每日",   icon: "☀️" },
 ];
 
@@ -56,7 +56,7 @@ export default function Header() {
                   letterSpacing: "0.1em",
                 }}
               >
-                佛說
+                佛说
               </span>
             </div>
           </Link>
@@ -110,7 +110,7 @@ export default function Header() {
               color: "#2c1810",
             }}
             className="show-mobile"
-            aria-label="菜單"
+            aria-label="菜单"
           >
             {menuOpen ? "✕" : "☰"}
           </button>

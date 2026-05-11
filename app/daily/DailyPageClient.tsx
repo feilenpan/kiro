@@ -7,7 +7,7 @@ import AudioPlayer from "@/components/AudioPlayer";
 import { dailySutras, DailySutra } from "@/lib/sutras";
 import { track, events } from "@/lib/analytics";
 
-// ── 禪修計時器 ────────────────────────────────────────────────────
+// ── 禅修计时器 ────────────────────────────────────────────────────
 function MeditationTimer() {
   const [duration,   setDuration]   = useState(10);
   const [timeLeft,   setTimeLeft]   = useState<number | null>(null);
@@ -27,8 +27,8 @@ function MeditationTimer() {
           setIsRunning(false);
           track(events.MEDITATE_DONE, { duration });
           if (window.speechSynthesis) {
-            const u = new SpeechSynthesisUtterance("禪修結束，阿彌陀佛。");
-            u.lang = "zh-TW";
+            const u = new SpeechSynthesisUtterance("禅修结束，阿弥陀佛。");
+            u.lang = "zh-CN";
             window.speechSynthesis.speak(u);
           }
           return 0;
@@ -54,7 +54,7 @@ function MeditationTimer() {
   return (
     <div className="zen-card" style={{ padding: "1.75rem", textAlign: "center" }}>
       <h3 style={{ fontFamily: "'Noto Serif SC', serif", fontSize: "1.2rem", color: "#2c1810", marginBottom: "1.25rem" }}>
-        🧘 靜心禪修計時
+        🧘 静心禅修计时
       </h3>
       <div style={{ position: "relative", width: "140px", height: "140px", margin: "0 auto 1.5rem" }}>
         <svg width="140" height="140" viewBox="0 0 140 140">
@@ -69,7 +69,7 @@ function MeditationTimer() {
             {timeLeft !== null ? fmt(timeLeft) : `${duration}:00`}
           </span>
           <span style={{ fontSize: "0.8rem", color: "#8a5a2f", fontFamily: "'Noto Sans SC', sans-serif" }}>
-            {isRunning ? "禪修中…" : "準備就緒"}
+            {isRunning ? "禅修中…" : "准备就绪"}
           </span>
         </div>
       </div>
@@ -88,12 +88,12 @@ function MeditationTimer() {
       )}
       <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
         {!isRunning
-          ? <button className="btn-gold" onClick={start}>▶ 開始禪修</button>
+          ? <button className="btn-gold" onClick={start}>▶ 开始禅修</button>
           : <button onClick={stop} style={{
               padding: "0.75rem 1.5rem", background: "rgba(44,24,16,0.1)",
               border: "1px solid rgba(44,24,16,0.2)", borderRadius: "9999px",
               color: "#2c1810", cursor: "pointer", fontFamily: "'Noto Sans SC', sans-serif", fontSize: "1rem",
-            }}>⏹ 結束</button>
+            }}>⏹ 结束</button>
         }
       </div>
       {timeLeft === 0 && (
@@ -102,20 +102,20 @@ function MeditationTimer() {
           background: "rgba(249,237,204,0.8)", borderRadius: "0.75rem",
           fontFamily: "'Noto Serif SC', serif", fontSize: "1rem", color: "#7a4c10",
         }}>
-          🙏 禪修圓滿，阿彌陀佛
+          🙏 禅修圆满，阿弥陀佛
         </div>
       )}
     </div>
   );
 }
 
-// ── 每日頁主體（Client Component）────────────────────────────────
+// ── 每日页主体（Client Component）────────────────────────────────
 interface Props {
   todaySutra:   DailySutra;
-  dailyAudio:   string | null;  // 今日金句 R2 URL
-  morningAudio: string | null;  // 早課 R2 URL
-  eveningAudio: string | null;  // 晚課 R2 URL
-  quoteAudios:  (string | null)[]; // 金句典藏 R2 URL 陣列
+  dailyAudio:   string | null;
+  morningAudio: string | null;
+  eveningAudio: string | null;
+  quoteAudios:  (string | null)[];
 }
 
 export default function DailyPageClient({
@@ -123,39 +123,39 @@ export default function DailyPageClient({
 }: Props) {
   const [selectedIdx, setSelectedIdx] = useState(-1);
 
-  const morningText = "清晨時分，萬物初醒。願您以清淨心迎接新的一天。南無阿彌陀佛。";
-  const eveningText = "日暮時分，塵囂漸息。回顧今日，若有過失，輕輕放下，明日再來。南無阿彌陀佛。";
+  const morningText = "清晨时分，万物初醒。愿您以清净心迎接新的一天。南无阿弥陀佛。";
+  const eveningText = "日暮时分，尘嚣渐息。回顾今日，若有过失，轻轻放下，明日再来。南无阿弥陀佛。";
 
   return (
     <>
       <Header />
       <main style={{ maxWidth: "900px", margin: "0 auto", padding: "2rem 1.25rem 4rem" }}>
 
-        {/* 頁頭 */}
+        {/* 页头 */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>☀️</div>
           <h1 style={{ fontFamily: "'Noto Serif SC', serif", fontSize: "1.8rem", fontWeight: 700, color: "#2c1810", marginBottom: "0.5rem" }}>
             每日修行
           </h1>
           <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "1rem", color: "#8a5a2f" }}>
-            每日一句，靜心禪修，陪伴您的修行之路
+            每日一句，静心禅修，陪伴您的修行之路
           </p>
         </div>
 
-        {/* 今日金句 — R2 URL 直接注入 */}
+        {/* 今日金句 */}
         <section style={{ marginBottom: "2rem" }}>
           <DailySutraCard sutra={todaySutra} audioUrl={dailyAudio} />
         </section>
 
-        {/* 早晚課誦 — R2 URL 直接注入 */}
+        {/* 早晚课诵 */}
         <section style={{ marginBottom: "2rem" }}>
           <div className="lotus-divider">
-            <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>早晚課誦</span>
+            <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>早晚课诵</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem" }}>
             {[
-              { title: "🌅 早課祝福", text: morningText, desc: "以清淨心迎接新一天", url: morningAudio },
-              { title: "🌙 晚課迴向", text: eveningText, desc: "回顧今日，安然入眠",  url: eveningAudio },
+              { title: "🌅 早课祝福", text: morningText, desc: "以清净心迎接新一天", url: morningAudio },
+              { title: "🌙 晚课回向", text: eveningText, desc: "回顾今日，安然入眠",  url: eveningAudio },
             ].map((item) => (
               <div key={item.title} className="zen-card" style={{ padding: "1.25rem" }}>
                 <h3 style={{ fontFamily: "'Noto Serif SC', serif", fontSize: "1rem", color: "#2c1810", marginBottom: "0.5rem" }}>
@@ -166,7 +166,7 @@ export default function DailyPageClient({
                 </p>
                 <AudioPlayer
                   text={item.text}
-                  label="聆聽"
+                  label="聆听"
                   size="sm"
                   isStatic={true}
                   audioUrl={item.url}
@@ -178,15 +178,15 @@ export default function DailyPageClient({
           </div>
         </section>
 
-        {/* 禪修計時器 */}
+        {/* 禅修计时器 */}
         <section style={{ marginBottom: "2rem" }}>
           <div className="lotus-divider">
-            <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>靜心禪修</span>
+            <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>静心禅修</span>
           </div>
           <MeditationTimer />
         </section>
 
-        {/* 金句典藏 — R2 URL 直接注入 */}
+        {/* 金句典藏 */}
         <section>
           <div className="lotus-divider">
             <span style={{ fontSize: "1.1rem", color: "#c98a16" }}>金句典藏</span>
@@ -224,7 +224,7 @@ export default function DailyPageClient({
                     </p>
                     <AudioPlayer
                       text={`${sutra.text}。摘自${sutra.source}。${sutra.explanation}`}
-                      label="朗讀"
+                      label="朗读"
                       size="sm"
                       isStatic={true}
                       audioUrl={quoteAudios[idx] ?? null}
