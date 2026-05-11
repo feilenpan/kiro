@@ -64,7 +64,7 @@ export default function HomePage() {
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>快速問佛</span>
           </div>
-          <div className="zen-card" style={{ padding: "1.75rem" }}>
+          <div className="zen-card" style={{ padding: "clamp(1rem, 3vw, 1.75rem)" }}>
             <ChatInterface />
           </div>
         </section>
