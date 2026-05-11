@@ -110,17 +110,27 @@ export async function POST(request: NextRequest) {
       baseURL: "https://api.minimaxi.com/v1",
     });
 
+    // 截斷每條歷史消息，防止單條過長佔滿 context
+    const trimmedHistory = history
+      .slice(-6) // 只保留最近 3 輪（6 條），避免 context 溢出
+      .map((m: { role: string; content: string }) => ({
+        role: m.role,
+        content:
+          typeof m.content === "string" && m.content.length > 300
+            ? m.content.slice(0, 300) + "…"
+            : m.content,
+      }));
+
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
-      // 保留最近 6 輪對話歷史
-      ...history.slice(-12),
+      ...trimmedHistory,
       { role: "user", content: message },
     ];
 
     const completion = await client.chat.completions.create({
       model: "MiniMax-M2.5",  // M2.5 性價比更高，同樣支持繁體中文
       messages,
-      max_tokens: 600,
+      max_tokens: 500,
       temperature: 0.7,
     });
 
