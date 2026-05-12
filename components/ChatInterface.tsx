@@ -26,13 +26,15 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function ChatInterface() {
-  const [messages,    setMessages]    = useState<Message[]>([]);
-  const [input,       setInput]       = useState("");
-  const [isLoading,   setIsLoading]   = useState(false);
-  const [isMock,      setIsMock]      = useState(false);
-  const [deviceId,    setDeviceId]    = useState<string>("");
-  const bottomRef   = useRef<HTMLDivElement>(null);
-  const inputRef    = useRef<HTMLTextAreaElement>(null);
+  const [messages,          setMessages]          = useState<Message[]>([]);
+  const [input,             setInput]             = useState("");
+  const [isLoading,         setIsLoading]         = useState(false);
+  const [isMock,            setIsMock]            = useState(false);
+  const [deviceId,          setDeviceId]          = useState<string>("");
+  const [isRestoredHistory, setIsRestoredHistory] = useState(false);
+  const [resumeDate,        setResumeDate]        = useState<string>("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef  = useRef<HTMLTextAreaElement>(null);
 
   // 初始化：读取设备ID + 加载本地历史记录
   useEffect(() => {
@@ -44,13 +46,47 @@ export default function ChatInterface() {
       setMessages(
         stored.map((m: StoredMessage) => ({ role: m.role, content: m.content }))
       );
+      setIsRestoredHistory(true);
+
+      // 取最后一条消息的时间戳，格式化为易读字符串
+      const last = stored[stored.length - 1];
+      if (last.timestamp) {
+        const d = new Date(last.timestamp);
+        const now = new Date();
+        const isToday =
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate();
+        const isYesterday =
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate() - 1;
+        if (isToday) {
+          setResumeDate(`今天 ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`);
+        } else if (isYesterday) {
+          setResumeDate("昨天");
+        } else {
+          setResumeDate(`${d.getMonth() + 1}月${d.getDate()}日`);
+        }
+      }
     }
   }, []);
 
-  // 自動滾動到底部
+  // 有历史恢复时，自动滚到最底部
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (isRestoredHistory && messages.length > 0) {
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 50);
+    }
+  }, [isRestoredHistory]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 每次新消息也滾動到底部
+  useEffect(() => {
+    if (!isRestoredHistory) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isRestoredHistory]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -64,7 +100,7 @@ export default function ChatInterface() {
     // 埋點：用戶發起 AI 問佛（核心價值指標）
     track(events.ASK_AI, {
       length:  text.trim().length,
-      round:   messages.length / 2, // 第幾輪對話
+      round:   messages.length / 2,
     });
 
     try {
@@ -92,6 +128,8 @@ export default function ChatInterface() {
           timestamp: Date.now(),
         }))
       );
+      // 新消息发出后取消"续上次"状态
+      setIsRestoredHistory(false);
     } catch {
       const errorMessage: Message = {
         role: "assistant",
@@ -174,6 +212,31 @@ export default function ChatInterface() {
           maxHeight: "50vh",
         }}
       >
+        {/* 「续上次对话」提示条 */}
+        {isRestoredHistory && messages.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 0.75rem",
+              background: "rgba(249, 237, 204, 0.6)",
+              border: "1px solid rgba(201, 138, 22, 0.2)",
+              borderRadius: "0.75rem",
+              fontSize: "0.82rem",
+              color: "#8a5a2f",
+              fontFamily: "'Noto Sans SC', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: "1rem" }}>🕰️</span>
+            <span>
+              續上次對話
+              {resumeDate ? `（${resumeDate}）` : ""}
+              — 法師記得您之前說的話
+            </span>
+          </div>
+        )}
+
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -212,7 +275,7 @@ export default function ChatInterface() {
                 {msg.content}
               </div>
 
-              {/* AI 回答底部：語音播放（動態內容，不永久緩存） */}
+              {/* AI 回答底部：語音播放 */}
               {msg.role === "assistant" && (
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
                   <AudioPlayer
@@ -335,6 +398,7 @@ export default function ChatInterface() {
             onClick={() => {
               clearChatHistory();
               setMessages([]);
+              setIsRestoredHistory(false);
             }}
             disabled={isLoading}
             style={{
