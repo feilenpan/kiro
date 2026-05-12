@@ -115,15 +115,12 @@ export async function POST(request: NextRequest) {
       baseURL: "https://api.minimaxi.com/v1",
     });
 
-    // 截斷每條歷史消息，防止單條過長佔滿 context
+    // 保留最近 20 條完整歷史（不截斷內容），讓 AI 能跨天記住用戶的煩惱
     const trimmedHistory = history
-      .slice(-6) // 只保留最近 3 輪（6 條），避免 context 溢出
+      .slice(-20)
       .map((m: { role: string; content: string }) => ({
         role: m.role,
-        content:
-          typeof m.content === "string" && m.content.length > 300
-            ? m.content.slice(0, 300) + "…"
-            : m.content,
+        content: m.content,
       }));
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
