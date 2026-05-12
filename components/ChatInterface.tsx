@@ -3,6 +3,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import AudioPlayer from "./AudioPlayer";
 import { track, events } from "@/lib/analytics";
+import {
+  loadChatHistory,
+  saveChatHistory,
+  clearChatHistory,
+  type StoredMessage,
+} from "@/lib/storage";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,11 +28,8 @@ const USER_ID_KEY = "foshuoUserId";
 
 // ── 获取或生成用户匿名 ID ────────────────────────────────────────
 async function getOrCreateUserId(): Promise<string> {
-  // 先从 localStorage 读取
   const stored = localStorage.getItem(USER_ID_KEY);
   if (stored) return stored;
-
-  // 首次访问：从服务端生成一个 UUID
   try {
     const res = await fetch("/api/user-id");
     const data = await res.json();
@@ -34,7 +37,6 @@ async function getOrCreateUserId(): Promise<string> {
     localStorage.setItem(USER_ID_KEY, userId);
     return userId;
   } catch {
-    // 降级：本地生成（不依赖服务端）
     const fallback = crypto.randomUUID();
     localStorage.setItem(USER_ID_KEY, fallback);
     return fallback;
@@ -42,27 +44,60 @@ async function getOrCreateUserId(): Promise<string> {
 }
 
 export default function ChatInterface() {
-  const [messages,  setMessages]  = useState<Message[]>([]);
-  const [input,     setInput]     = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isMock,    setIsMock]    = useState(false);
-  const [hasMemory, setHasMemory] = useState(false); // 是否已有记忆
+  const [messages,          setMessages]          = useState<Message[]>([]);
+  const [input,             setInput]             = useState("");
+  const [isLoading,         setIsLoading]         = useState(false);
+  const [isMock,            setIsMock]            = useState(false);
+  const [hasMemory,         setHasMemory]         = useState(false);
+  const [isRestoredHistory, setIsRestoredHistory] = useState(false);
+  const [resumeDate,        setResumeDate]        = useState<string>("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const userIdRef = useRef<string | null>(null);
 
-  // 组件挂载时初始化 userId
+  // 组件挂载：初始化 userId + 从 localStorage 恢复对话历史
   useEffect(() => {
     getOrCreateUserId().then((id) => {
       userIdRef.current = id;
     });
+
+    const stored = loadChatHistory();
+    if (stored.length > 0) {
+      setMessages(stored.map((m: StoredMessage) => ({ role: m.role, content: m.content })));
+      setIsRestoredHistory(true);
+      setHasMemory(true);
+
+      // 格式化上次对话时间
+      const last = stored[stored.length - 1];
+      if (last.timestamp) {
+        const d = new Date(last.timestamp);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+        if (diffDays === 0) {
+          setResumeDate(`今天 ${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}`);
+        } else if (diffDays === 1) {
+          setResumeDate("昨天");
+        } else {
+          setResumeDate(`${d.getMonth() + 1}月${d.getDate()}日`);
+        }
+      }
+    }
   }, []);
+
+  // 历史恢复时自动滚到最新一条（底部）
+  useEffect(() => {
+    if (isRestoredHistory && messages.length > 0) {
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
+    }
+  }, [isRestoredHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 自动滚动到底部
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!isRestoredHistory) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isRestoredHistory]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -72,6 +107,7 @@ export default function ChatInterface() {
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
+    setIsRestoredHistory(false); // 发消息后取消「续上次」状态
 
     track(events.ASK_AI, {
       length: text.trim().length,
@@ -85,14 +121,22 @@ export default function ChatInterface() {
         body: JSON.stringify({
           message: text.trim(),
           history: messages.map((m) => ({ role: m.role, content: m.content })),
-          userId:  userIdRef.current,   // ← 携带用户 ID
+          userId:  userIdRef.current,
         }),
       });
 
       const data = await res.json();
       setIsMock(data.isMock);
-      setHasMemory(true); // 至少有一轮对话后标记有记忆
-      setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+      setHasMemory(true);
+      const finalMessages = [...newMessages, { role: "assistant", content: data.reply } as Message];
+      setMessages(finalMessages);
+
+      // 保存到 localStorage
+      saveChatHistory(finalMessages.map((m) => ({
+        role: m.role,
+        content: m.content,
+        timestamp: Date.now(),
+      })));
     } catch {
       setMessages([
         ...newMessages,
@@ -113,8 +157,31 @@ export default function ChatInterface() {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* 记忆提示（有过对话才显示）*/}
-      {hasMemory && (
+      {/* 「续上次对话」提示条 — 从历史恢复时显示 */}
+      {isRestoredHistory && messages.length > 0 && (
+        <div
+          className="fade-in"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            padding: "0.4rem 0.75rem",
+            background: "rgba(229, 171, 40, 0.1)",
+            border: "1px solid rgba(201, 138, 22, 0.2)",
+            borderRadius: "0.5rem",
+            fontSize: "0.8rem",
+            color: "#a06810",
+            fontFamily: "'Noto Sans SC', sans-serif",
+            marginBottom: "0.75rem",
+          }}
+        >
+          <span>🕰️</span>
+          <span>续上次对话{resumeDate ? `（${resumeDate}）` : ""} — 法师记得您之前说的话</span>
+        </div>
+      )}
+
+      {/* 记忆提示（有过对话才显示，且不是恢复状态）*/}
+      {hasMemory && !isRestoredHistory && (
         <div
           className="fade-in"
           style={{
@@ -349,6 +416,33 @@ export default function ChatInterface() {
         >
           {isLoading ? "⏳ 法师思考中…" : "🙏 问佛"}
         </button>
+
+        {/* 清空历史（有对话记录时显示）*/}
+        {messages.length > 0 && (
+          <button
+            onClick={() => {
+              clearChatHistory();
+              setMessages([]);
+              setIsRestoredHistory(false);
+              setHasMemory(false);
+            }}
+            disabled={isLoading}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              background: "transparent",
+              border: "1px solid rgba(201, 138, 22, 0.25)",
+              borderRadius: "0.5rem",
+              fontSize: "0.85rem",
+              color: "#a06810",
+              fontFamily: "'Noto Sans SC', sans-serif",
+              cursor: "pointer",
+              opacity: 0.7,
+            }}
+          >
+            🗑️ 清空对话记录
+          </button>
+        )}
       </div>
     </div>
   );
