@@ -3,6 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import AudioPlayer from "./AudioPlayer";
 import { track, events } from "@/lib/analytics";
+import {
+  getDeviceId,
+  loadChatHistory,
+  saveChatHistory,
+  clearChatHistory,
+  type StoredMessage,
+} from "@/lib/storage";
 
 interface Message {
   role: "user" | "assistant";
@@ -23,8 +30,22 @@ export default function ChatInterface() {
   const [input,       setInput]       = useState("");
   const [isLoading,   setIsLoading]   = useState(false);
   const [isMock,      setIsMock]      = useState(false);
+  const [deviceId,    setDeviceId]    = useState<string>("");
   const bottomRef   = useRef<HTMLDivElement>(null);
   const inputRef    = useRef<HTMLTextAreaElement>(null);
+
+  // 初始化：读取设备ID + 加载本地历史记录
+  useEffect(() => {
+    const id = getDeviceId();
+    setDeviceId(id);
+
+    const stored = loadChatHistory();
+    if (stored.length > 0) {
+      setMessages(
+        stored.map((m: StoredMessage) => ({ role: m.role, content: m.content }))
+      );
+    }
+  }, []);
 
   // 自動滾動到底部
   useEffect(() => {
@@ -53,17 +74,30 @@ export default function ChatInterface() {
         body: JSON.stringify({
           message: text.trim(),
           history: messages.map((m) => ({ role: m.role, content: m.content })),
+          deviceId,
         }),
       });
 
       const data = await res.json();
       setIsMock(data.isMock);
-      setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+      const assistantMessage: Message = { role: "assistant", content: data.reply };
+      const finalMessages = [...newMessages, assistantMessage];
+      setMessages(finalMessages);
+
+      // 保存到 localStorage（含时间戳）
+      saveChatHistory(
+        finalMessages.map((m) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: Date.now(),
+        }))
+      );
     } catch {
-      setMessages([
-        ...newMessages,
-        { role: "assistant", content: "阿彌陀佛，網絡不通暢，請稍後再試。🙏" },
-      ]);
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "阿彌陀佛，網絡不通暢，請稍後再試。🙏",
+      };
+      setMessages([...newMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -294,6 +328,31 @@ export default function ChatInterface() {
         >
           {isLoading ? "⏳ 法師思考中…" : "🙏 問佛"}
         </button>
+
+        {/* 清空歷史按鈕（有對話記錄時才顯示） */}
+        {messages.length > 0 && (
+          <button
+            onClick={() => {
+              clearChatHistory();
+              setMessages([]);
+            }}
+            disabled={isLoading}
+            style={{
+              width: "100%",
+              padding: "0.5rem",
+              background: "transparent",
+              border: "1px solid rgba(201, 138, 22, 0.25)",
+              borderRadius: "0.5rem",
+              fontSize: "0.85rem",
+              color: "#a06810",
+              fontFamily: "'Noto Sans SC', sans-serif",
+              cursor: "pointer",
+              opacity: 0.7,
+            }}
+          >
+            🗑️ 清空對話記錄
+          </button>
+        )}
       </div>
     </div>
   );

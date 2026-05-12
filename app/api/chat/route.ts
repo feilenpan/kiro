@@ -77,10 +77,15 @@ const OFF_TOPIC_REPLY =
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history = [] } = await request.json();
+    const { message, history = [], deviceId } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "請輸入問題" }, { status: 400 });
+    }
+
+    // 记录设备ID（用于调试/统计，不存数据库）
+    if (process.env.NODE_ENV === "development" && deviceId) {
+      console.log(`[chat] deviceId=${deviceId} message_len=${message.trim().length}`);
     }
 
     // ── 第一層：前置關鍵詞過濾（0 token 消耗）──────────────────
