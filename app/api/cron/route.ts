@@ -121,7 +121,7 @@ async function callTTS(text: string, apiKey: string): Promise<Buffer | null> {
     body: JSON.stringify({
       model: "speech-2.8-hd",
       text: text.slice(0, 500),
-      voice_setting: { voice_id: "female-shaonv", speed: 0.88, vol: 1.0, pitch: 0 },
+      voice_setting: { voice_id: "female-yujie", speed: 0.88, vol: 1.0, pitch: 0 },
       audio_setting: { sample_rate: 32000, bitrate: 128000, format: "mp3", channel: 1 },
     }),
   });

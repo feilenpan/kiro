@@ -24,7 +24,7 @@ import {
 // ── MiniMax TTS ───────────────────────────────────────────────────
 // 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
 const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
-const VOICE_ID = "female-shaonv";  // speech-2.8-hd 支持的 voice_id
+const VOICE_ID = "female-yujie";  // 御姐音，沉穩慈悲，適合佛經朗誦
 
 /**
  * TTS 語氣設定說明：
