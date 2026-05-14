@@ -6,30 +6,30 @@
 
 @layer base {
   html {
-    font-size: 16px;        /* 手機預設 16px，避免 rem 單位過大 */
+    font-size: 16px;
     scroll-behavior: smooth;
+    --font-serif: 'Noto Serif SC', Georgia, serif;
+    --font-sans:  'Noto Sans SC', sans-serif;
   }
 
   @media (min-width: 640px) {
-    html { font-size: 18px; }   /* 平板/桌面才放大 */
+    html { font-size: 18px; }
   }
 
   body {
     background-color: #f5f0e8;
     color: #2c1810;
-    font-family: 'Noto Serif SC', Georgia, serif;
-    /* 防止任何子元素橫向溢出撐破頁面 */
+    font-family: var(--font-serif);
     overflow-x: hidden;
   }
 
-  /* 確保所有元素不橫向溢出 */
   *, *::before, *::after {
     box-sizing: border-box;
     max-width: 100%;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Noto Serif SC', Georgia, serif;
+    font-family: var(--font-serif);
     color: #2c1810;
   }
 }
@@ -47,7 +47,7 @@
 .btn-gold {
   background: linear-gradient(to bottom, #e5ab28, #c98a16);
   color: white;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
@@ -74,7 +74,7 @@
   border: 2px solid #e5ab28;
   color: #a06810;
   background: transparent;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
@@ -95,7 +95,7 @@
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   color: #2c1810;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.05rem;
   outline: none;
   transition: all 0.2s;

@@ -195,3 +195,57 @@ export function getPublicUrl(key: string): string | null {
   if (!publicUrl) return null;
   return `${publicUrl}/${key}`;
 }
+
+/**
+ * 上傳 JSON 數據到 R2
+ */
+export async function uploadJSON(key: string, data: unknown): Promise<string | null> {
+  const config = getR2Config();
+  if (!config) {
+    console.warn("[R2] 未配置 R2 環境變量，跳過 JSON 上傳");
+    return null;
+  }
+
+  const json = JSON.stringify(data, null, 2);
+  const body = new TextEncoder().encode(json);
+
+  const endpoint = `https://${config.accountId}.r2.cloudflarestorage.com`;
+  const url = `${endpoint}/${config.bucket}/${key}`;
+
+  const headers = await signRequest({
+    method: "PUT",
+    url,
+    body,
+    contentType: "application/json; charset=utf-8",
+    accessKey: config.accessKey,
+    secretKey: config.secretKey,
+    region: "auto",
+    service: "s3",
+  });
+  headers.set("Content-Length", String(body.length));
+
+  const res = await fetch(url, { method: "PUT", headers, body });
+
+  if (!res.ok) {
+    console.error("[R2] JSON 上傳失敗:", res.status, await res.text());
+    return null;
+  }
+
+  return `${config.publicUrl}/${key}`;
+}
+
+/**
+ * 從 R2 公開 URL 讀取 JSON 數據
+ */
+export async function fetchJSON<T>(key: string): Promise<T | null> {
+  const publicUrl = process.env.R2_PUBLIC_URL;
+  if (!publicUrl) return null;
+
+  try {
+    const res = await fetch(`${publicUrl}/${key}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}

@@ -3,12 +3,12 @@ import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import ChatInterface from "@/components/ChatInterface";
 import { FeatureCards, SutraCategories } from "@/components/FeatureCards";
-import { getTodaySutra, getDailyAudioUrl } from "@/lib/sutras";
+import { getTodaySutra, getTodayAISutra, getDailyAudioUrl } from "@/lib/sutras";
 
-export default function HomePage() {
-  // Server Component：在服務端拼好 R2 URL，傳給客戶端組件
-  const todaySutra  = getTodaySutra();
-  const dailyAudio  = getDailyAudioUrl(); // R2 未配置時返回 null
+export default async function HomePage() {
+  const aiSutra    = await getTodayAISutra();
+  const todaySutra = aiSutra ?? getTodaySutra();
+  const dailyAudio = getDailyAudioUrl();
 
   return (
     <>
@@ -46,12 +46,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 今日金句 — 傳入服務端已解析的 R2 URL */}
         <section style={{ marginBottom: "2.5rem" }}>
           <DailySutraCard sutra={todaySutra} audioUrl={dailyAudio} />
         </section>
 
-        {/* 功能介紹 */}
         <section style={{ marginBottom: "2.5rem" }}>
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>功能介紹</span>
@@ -59,7 +57,6 @@ export default function HomePage() {
           <FeatureCards />
         </section>
 
-        {/* 快速問佛 */}
         <section style={{ marginBottom: "2.5rem" }}>
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>快速問佛</span>
@@ -69,7 +66,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 佛經典籍分類 */}
         <section>
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>佛經典籍</span>

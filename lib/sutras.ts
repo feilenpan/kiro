@@ -14,6 +14,7 @@ import {
   MORNING_KEY,
   EVENING_KEY,
 } from "./audio-keys";
+import { fetchJSON } from "./r2";
 
 export interface DailySutra {
   id: number;
@@ -181,6 +182,17 @@ export function getTodaySutra(): DailySutra {
     (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
   );
   return dailySutras[dayOfYear % dailySutras.length];
+}
+
+/**
+ * 從 R2 讀取今日 AI 生成的金句（Server Component / API Route 專用）
+ * 返回 null 表示尚未生成或 R2 未配置，調用方應 fallback 到 getTodaySutra()
+ */
+export async function getTodayAISutra(): Promise<DailySutra | null> {
+  const today = new Date();
+  const ymd = today.toISOString().slice(0, 10);
+  const key = `data/daily/${ymd}.json`;
+  return fetchJSON<DailySutra>(key);
 }
 
 // ── 音頻 URL 工具函數 ─────────────────────────────────────────────

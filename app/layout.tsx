@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import LocaleProvider from "@/components/LocaleProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,9 +16,9 @@ export const metadata: Metadata = {
     title: "佛說",
   },
   icons: {
-    icon:        [{ url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" }],
-    apple:       [{ url: "/icon-192.svg", sizes: "192x192" }],
-    shortcut:    "/icon-192.svg",
+    icon:     [{ url: "/icon-192.svg", sizes: "192x192", type: "image/svg+xml" }],
+    apple:    [{ url: "/icon-192.svg", sizes: "192x192" }],
+    shortcut: "/icon-192.svg",
   },
   openGraph: {
     title: "佛說 — AI 佛學智慧",
@@ -36,18 +37,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body style={{ minHeight: "100vh", backgroundColor: "#f5f0e8" }}>
-        {children}
-        <PWAInstallPrompt />
+        <LocaleProvider>
+          {children}
+          <PWAInstallPrompt />
+        </LocaleProvider>
         <Analytics />
       </body>
     </html>

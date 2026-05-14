@@ -112,14 +112,15 @@ function MeditationTimer() {
 // ── 每日頁主體（Client Component）────────────────────────────────
 interface Props {
   todaySutra:   DailySutra;
-  dailyAudio:   string | null;  // 今日金句 R2 URL
-  morningAudio: string | null;  // 早課 R2 URL
-  eveningAudio: string | null;  // 晚課 R2 URL
-  quoteAudios:  (string | null)[]; // 金句典藏 R2 URL 陣列
+  aiGenerated:  boolean;
+  dailyAudio:   string | null;
+  morningAudio: string | null;
+  eveningAudio: string | null;
+  quoteAudios:  (string | null)[];
 }
 
 export default function DailyPageClient({
-  todaySutra, dailyAudio, morningAudio, eveningAudio, quoteAudios,
+  todaySutra, aiGenerated, dailyAudio, morningAudio, eveningAudio, quoteAudios,
 }: Props) {
   const [selectedIdx, setSelectedIdx] = useState(-1);
 
@@ -140,6 +141,18 @@ export default function DailyPageClient({
           <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "1rem", color: "#8a5a2f" }}>
             每日一句，靜心禪修，陪伴您的修行之路
           </p>
+          {aiGenerated && (
+            <div style={{ marginTop: "0.5rem" }}>
+              <span style={{
+                display: "inline-block", padding: "0.2rem 0.75rem",
+                background: "linear-gradient(135deg, #e8f4fd, #c8e6f9)",
+                borderRadius: "9999px", fontSize: "0.78rem", color: "#2980b9",
+                fontFamily: "'Noto Sans SC', sans-serif",
+              }}>
+                ✨ 今日金句由 AI 全新生成
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 今日金句 — R2 URL 直接注入 */}
