@@ -1,3 +1,5 @@
+/* 字體由 LocaleProvider 根據瀏覽器語言動態加載（SC 或 TC）*/
+/* 預設加載 SC，LocaleProvider 掛載後自動切換 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
 
 @tailwind base;
@@ -8,6 +10,9 @@
   html {
     font-size: 16px;        /* 手機預設 16px，避免 rem 單位過大 */
     scroll-behavior: smooth;
+    /* 字體 CSS 變量預設值，LocaleProvider 掛載後會動態覆蓋 */
+    --font-serif: 'Noto Serif SC', Georgia, serif;
+    --font-sans:  'Noto Sans SC', sans-serif;
   }
 
   @media (min-width: 640px) {
@@ -17,7 +22,7 @@
   body {
     background-color: #f5f0e8;
     color: #2c1810;
-    font-family: 'Noto Serif SC', Georgia, serif;
+    font-family: var(--font-serif);
     /* 防止任何子元素橫向溢出撐破頁面 */
     overflow-x: hidden;
   }
@@ -29,7 +34,7 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Noto Serif SC', Georgia, serif;
+    font-family: var(--font-serif);
     color: #2c1810;
   }
 }
@@ -47,7 +52,7 @@
 .btn-gold {
   background: linear-gradient(to bottom, #e5ab28, #c98a16);
   color: white;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
@@ -74,7 +79,7 @@
   border: 2px solid #e5ab28;
   color: #a06810;
   background: transparent;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 9999px;
@@ -95,7 +100,7 @@
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   color: #2c1810;
-  font-family: 'Noto Sans SC', sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.05rem;
   outline: none;
   transition: all 0.2s;

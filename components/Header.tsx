@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLocale } from "./LocaleProvider";
 
 interface NavItem {
   href: string;
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { variant, toggle } = useLocale();
 
   return (
     <>
@@ -49,7 +51,7 @@ export default function Header() {
               <span style={{ fontSize: "1.75rem" }}>☸️</span>
               <span
                 style={{
-                  fontFamily: "'Noto Serif SC', serif",
+                  fontFamily: "var(--font-serif)",
                   fontSize: "1.4rem",
                   fontWeight: 700,
                   color: "#2c1810",
@@ -66,6 +68,7 @@ export default function Header() {
             style={{
               display: "flex",
               gap: "0.25rem",
+              alignItems: "center",
             }}
             className="hidden-mobile"
           >
@@ -79,7 +82,7 @@ export default function Header() {
                   gap: "0.3rem",
                   padding: "0.5rem 0.9rem",
                   borderRadius: "0.75rem",
-                  fontFamily: "'Noto Sans SC', sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: "1rem",
                   color: "#5c3d2e",
                   textDecoration: "none",
@@ -96,24 +99,60 @@ export default function Header() {
                 <span>{item.label}</span>
               </Link>
             ))}
+
+            {/* 繁簡切換按鈕 */}
+            <button
+              onClick={toggle}
+              title={variant === "SC" ? "切換到繁體" : "切換到簡體"}
+              style={{
+                marginLeft: "0.5rem",
+                padding: "0.4rem 0.7rem",
+                borderRadius: "0.5rem",
+                border: "1px solid rgba(201, 138, 22, 0.3)",
+                background: "rgba(249, 237, 204, 0.6)",
+                color: "#7a4c10",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                fontFamily: "var(--font-sans)",
+                transition: "all 0.2s",
+              }}
+            >
+              {variant === "SC" ? "繁" : "简"}
+            </button>
           </nav>
 
-          {/* 行動端漢堡菜單 */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            style={{
-              background: "none",
-              border: "none",
-              fontSize: "1.5rem",
-              cursor: "pointer",
-              padding: "0.5rem",
-              color: "#2c1810",
-            }}
-            className="show-mobile"
-            aria-label="菜單"
-          >
-            {menuOpen ? "✕" : "☰"}
-          </button>
+          {/* 行動端：繁簡切換 + 漢堡菜單 */}
+          <div className="show-mobile" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <button
+              onClick={toggle}
+              style={{
+                padding: "0.35rem 0.6rem",
+                borderRadius: "0.5rem",
+                border: "1px solid rgba(201, 138, 22, 0.3)",
+                background: "rgba(249, 237, 204, 0.6)",
+                color: "#7a4c10",
+                cursor: "pointer",
+                fontSize: "0.8rem",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {variant === "SC" ? "繁" : "简"}
+            </button>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                padding: "0.5rem",
+                color: "#2c1810",
+              }}
+              aria-label="菜單"
+            >
+              {menuOpen ? "✕" : "☰"}
+            </button>
+          </div>
         </div>
 
         {/* 行動端下拉菜單 */}
@@ -136,7 +175,7 @@ export default function Header() {
                   gap: "0.75rem",
                   padding: "0.9rem 1rem",
                   borderRadius: "0.75rem",
-                  fontFamily: "'Noto Sans SC', sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontSize: "1.1rem",
                   color: "#2c1810",
                   textDecoration: "none",
@@ -156,7 +195,7 @@ export default function Header() {
         .show-mobile   { display: none; }
         @media (max-width: 640px) {
           .hidden-mobile { display: none !important; }
-          .show-mobile   { display: block !important; }
+          .show-mobile   { display: flex !important; }
         }
       `}</style>
     </>
