@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
 const SYSTEM_PROMPT = `你是「佛說」平台的 AI 法師助手，精通佛法、禪學、淨土、般若等各宗派義理。
 
@@ -77,6 +78,22 @@ const OFF_TOPIC_REPLY =
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate Limiting：每 IP 每分鐘最多 10 次 ────────────────────
+    const ip = getClientIP(request);
+    const limit = rateLimit(ip, 10, 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { reply: "您的提問過於頻繁，請稍作休息後再試。阿彌陀佛。🙏" },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil(limit.resetInMs / 1000)),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
+
     const { message, history = [], deviceId } = await request.json();
 
     if (!message || typeof message !== "string") {

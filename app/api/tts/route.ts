@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 
 // ── MiniMax T2A 語音合成 API ──────────────────────────────────────
 // 注意：Token Plan key (sk-cp-) 需要使用 api.minimaxi.com 端點
@@ -100,6 +101,19 @@ async function callMiniMaxTTS(
 // ── Route Handler ─────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate Limiting：每 IP 每分鐘最多 15 次（TTS 比 chat 寬鬆些）──
+    const ip = getClientIP(request);
+    const limit = rateLimit(ip, 15, 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "請求過於頻繁，請稍後再試" },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(limit.resetInMs / 1000)) },
+        }
+      );
+    }
+
     const {
       text,
       voice_id = "female-shaonv",
