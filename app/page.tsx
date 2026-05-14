@@ -3,12 +3,13 @@ import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import ChatInterface from "@/components/ChatInterface";
 import { FeatureCards, SutraCategories } from "@/components/FeatureCards";
-import { getTodaySutra, getDailyAudioUrl } from "@/lib/sutras";
+import { getTodaySutra, getTodayAISutra, getDailyAudioUrl } from "@/lib/sutras";
 
-export default function HomePage() {
-  // Server Component：在服務端拼好 R2 URL，傳給客戶端組件
-  const todaySutra  = getTodaySutra();
-  const dailyAudio  = getDailyAudioUrl(); // R2 未配置時返回 null
+export default async function HomePage() {
+  // 優先使用 AI 生成的今日金句，失敗則 fallback 到靜態數組
+  const aiSutra    = await getTodayAISutra();
+  const todaySutra = aiSutra ?? getTodaySutra();
+  const dailyAudio = getDailyAudioUrl();
 
   return (
     <>
