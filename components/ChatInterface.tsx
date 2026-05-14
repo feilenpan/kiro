@@ -153,6 +153,36 @@ export default function ChatInterface() {
       {/* 建議問題（首次顯示） */}
       {messages.length === 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
+          {/* 固定歡迎語，替代 AI 自我介紹，避免模型輸出「貧僧」 */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              alignItems: "flex-end",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <div
+              style={{
+                width: "36px", height: "36px", borderRadius: "50%",
+                background: "linear-gradient(135deg, #f9edcc, #e5ab28)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "1.1rem", flexShrink: 0,
+              }}
+            >
+              ☸️
+            </div>
+            <div
+              className="chat-bubble-ai"
+              style={{ whiteSpace: "pre-wrap", maxWidth: "78%" }}
+            >
+              {`阿彌陀佛，歡迎來到「佛說」。
+
+我是這裡的佛法助手，願以佛法智慧陪伴您。無論是人生煩惱、修行疑問，還是經文解讀，都可以告訴我。
+
+願您心得清涼，吉祥如意。🙏`}
+            </div>
+          </div>
           <p
             style={{
               fontFamily: "'Noto Sans SC', sans-serif",
