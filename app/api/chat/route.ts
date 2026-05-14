@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     const completion = await client.chat.completions.create({
       model: "MiniMax-M2.5",  // M2.5 性價比更高，同樣支持繁體中文
       messages,
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.7,
     });
 
