@@ -86,8 +86,6 @@ export default async function HomePage() {
         </p>
         <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "0.75rem", color: "#bc8f5e" }}>
           <a href="/privacy" style={{ color: "#a06810", textDecoration: "underline" }}>隱私政策</a>
-          {" · "}
-          若您有心理危機，請撥打撒瑪利亞防止自殺服務 2389 2222
         </p>
       </footer>
     </>
