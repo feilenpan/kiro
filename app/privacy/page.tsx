@@ -63,17 +63,7 @@ export default function PrivacyPage() {
               </ul>
             </Section>
 
-            <Section title="七、心理支持">
-              <p>
-                如您在使用本站过程中感到情绪困扰，欢迎拨打以下热线寻求专业支持：
-              </p>
-              <ul style={{ paddingLeft: "1.5rem" }}>
-                <li>撒玛利亚防止自杀服务（香港）：<strong>2389 2222</strong>（24小时）</li>
-                <li>生命热线（香港）：<strong>2382 0000</strong>（24小时）</li>
-              </ul>
-            </Section>
-
-            <Section title="八、联系方式">
+            <Section title="七、联系方式">
               <p>如您对本隐私政策有任何疑问，欢迎通过本站「问佛」功能联系我们。</p>
             </Section>
 
