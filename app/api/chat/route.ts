@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { rateLimit, getClientIP } from "@/lib/rate-limit";
 import {
   getMemory,
   appendTurn,
@@ -83,6 +84,16 @@ const MINIMAX_BASE_URL = "https://api.minimaxi.com/v1";
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate Limiting：每 IP 每分鐘最多 10 次 ────────────────────
+    const ip = getClientIP(request);
+    const limit = rateLimit(ip, 10, 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { reply: "您的提问过于频繁，请稍作休息后再试。阿弥陀佛。🙏" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(limit.resetInMs / 1000)) } }
+      );
+    }
+
     const { message, history = [], userId } = await request.json();
 
     if (!message || typeof message !== "string") {
@@ -136,7 +147,7 @@ export async function POST(request: NextRequest) {
     const completion = await client.chat.completions.create({
       model: "MiniMax-M2.5",
       messages,
-      max_tokens: 500,
+      max_tokens: 800,
       temperature: 0.7,
     });
 

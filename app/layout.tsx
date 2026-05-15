@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import LocaleProvider from "@/components/LocaleProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,7 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -46,8 +47,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body style={{ minHeight: "100vh", backgroundColor: "#f5f0e8" }}>
-        {children}
-        <PWAInstallPrompt />
+        <LocaleProvider>
+          {children}
+          <PWAInstallPrompt />
+        </LocaleProvider>
         <Analytics />
       </body>
     </html>
