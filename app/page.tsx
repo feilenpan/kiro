@@ -91,7 +91,7 @@ export default function HomePage() {
         <p style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "0.75rem", color: "#bc8f5e" }}>
           <a href="/privacy" style={{ color: "#a06810", textDecoration: "underline" }}>隐私政策</a>
           {" · "}
-          若您有心理危机，请拨打撒玛利亚防止自杀服务 2389 2222
+          <a href="tel:23892222" style={{ color: "#bc8f5e", textDecoration: "none" }}>需要帮助？🤝</a>
         </p>
       </footer>
     </>
