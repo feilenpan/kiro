@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLocale } from "./LocaleProvider";
 
 interface NavItem {
   href: string;
@@ -18,6 +19,7 @@ const navItems: NavItem[] = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { variant, toggle } = useLocale();
 
   return (
     <>
@@ -96,6 +98,19 @@ export default function Header() {
                 <span>{item.label}</span>
               </Link>
             ))}
+            {/* 繁簡切換 */}
+            <button
+              onClick={toggle}
+              title={variant === "SC" ? "切換到繁體" : "切換到简体"}
+              style={{
+                marginLeft: "0.5rem", padding: "0.4rem 0.7rem", borderRadius: "0.5rem",
+                border: "1px solid rgba(201, 138, 22, 0.3)", background: "rgba(249, 237, 204, 0.6)",
+                color: "#7a4c10", cursor: "pointer", fontSize: "0.85rem",
+                fontFamily: "'Noto Sans SC', sans-serif",
+              }}
+            >
+              {variant === "SC" ? "繁" : "简"}
+            </button>
           </nav>
 
           {/* 行動端漢堡菜單 */}
