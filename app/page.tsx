@@ -15,18 +15,18 @@ export default async function HomePage() {
       <Header />
       <main style={{ maxWidth: "900px", margin: "0 auto", padding: "1.5rem 1.25rem 4rem" }}>
 
-        <section style={{ textAlign: "center", padding: "1.75rem 0 1.5rem" }}>
-          <div className="float-gentle" style={{ fontSize: "3.5rem", marginBottom: "0.75rem" }}>☸️</div>
+        <section style={{ textAlign: "center", padding: "2rem 0 1.5rem" }}>
+          <div className="float-gentle" style={{ fontSize: "4rem", marginBottom: "1rem" }}>☸️</div>
           <h1 style={{
             fontFamily: "'Noto Serif SC', serif",
-            fontSize: "clamp(1.8rem, 8vw, 3rem)", fontWeight: 700,
-            color: "#2c1810", marginBottom: "0.75rem", letterSpacing: "0.15em",
+            fontSize: "clamp(2.2rem, 10vw, 3.5rem)", fontWeight: 700,
+            color: "#2c1810", marginBottom: "0.75rem", letterSpacing: "0.18em",
           }}>
             佛說
           </h1>
           <p style={{
             fontFamily: "'Noto Sans SC', sans-serif",
-            fontSize: "clamp(0.95rem, 3vw, 1.1rem)",
+            fontSize: "clamp(1rem, 3.5vw, 1.2rem)",
             color: "#8a5a2f", lineHeight: 1.8, maxWidth: "480px", margin: "0 auto 1.5rem",
           }}>
             以 AI 之力，弘揚佛法智慧<br />
@@ -34,12 +34,12 @@ export default async function HomePage() {
           </p>
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/ask">
-              <button className="btn-gold" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
+              <button className="btn-gold" style={{ fontSize: "0.95rem", padding: "0.55rem 1.4rem" }}>
                 🙏 向AI問佛
               </button>
             </Link>
             <Link href="/sutras">
-              <button className="btn-outline" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
+              <button className="btn-outline" style={{ fontSize: "0.95rem", padding: "0.55rem 1.4rem" }}>
                 📖 瀏覽佛經
               </button>
             </Link>
