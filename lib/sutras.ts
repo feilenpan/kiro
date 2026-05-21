@@ -218,3 +218,20 @@ export const troubleKeywords: Record<string, string> = {
   病痛: "身苦心不苦，是修行的智慧",
   死亡: "生死轮回，了解无常才能解脱",
 };
+
+
+/**
+ * 從 R2 讀取今日 AI 生成的金句（Server Component 專用）
+ * 返回 null 時 fallback 到 getTodaySutra()
+ */
+export async function getTodayAISutra(): Promise<DailySutra | null> {
+  try {
+    const { fetchJSON } = await import("./r2");
+    const today = new Date();
+    const ymd = today.toISOString().slice(0, 10);
+    const key = `data/daily/${ymd}.json`;
+    return fetchJSON<DailySutra>(key);
+  } catch {
+    return null;
+  }
+}
