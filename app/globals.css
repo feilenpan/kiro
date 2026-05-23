@@ -165,10 +165,10 @@
   border: 1px solid rgba(201, 138, 22, 0.25);
   color: #2c1810;
   border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
-  padding: 0.75rem 1rem;
-  font-size: 1.05rem;
-  line-height: 1.8;
-  font-family: 'Noto Serif SC', serif;
+  padding: 0.9rem 1.1rem;
+  font-size: 1.15rem;
+  line-height: 2.0;
+  font-family: 'Noto Sans SC', sans-serif;
 }
 
 /* 按鈕手機端縮小 padding */
@@ -182,9 +182,12 @@
     font-size: 0.95rem;
   }
   /* 聊天氣泡手機端字號 */
-  .chat-bubble-user,
+  .chat-bubble-user {
+    font-size: 1rem;
+  }
   .chat-bubble-ai {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
+    line-height: 2.0;
   }
 }
 
