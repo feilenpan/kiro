@@ -150,13 +150,16 @@ export async function GET(request: NextRequest) {
   const jsonKey  = dailyQuoteKey(today);
 
   // 幂等：今天已生成就跳過
-  const audioExists = await checkExists(audioKey);
-  if (audioExists) {
+  // 以 JSON 存在作為幂等判斷依據（而非音頻）
+  // 舊版 cron 只生成音頻沒有 JSON，所以改用 JSON 判斷
+  // 確保每天都能用 AI 生成全新金句
+  const jsonExists = await checkExists(jsonKey);
+  if (jsonExists) {
     const publicUrl = process.env.R2_PUBLIC_URL;
     return NextResponse.json({
       ok: true, cached: true,
       url: publicUrl ? `${publicUrl}/${audioKey}` : audioKey,
-      msg: "今日金句已存在，無需重新生成",
+      msg: "今日 AI 金句已存在，無需重新生成",
     });
   }
 
