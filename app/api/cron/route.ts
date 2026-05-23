@@ -12,11 +12,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 import { uploadAudio, uploadJSON, checkExists } from "@/lib/r2";
 import { dailyAudioKey } from "@/lib/audio-keys";
 import { dailySutras, DailySutra } from "@/lib/sutras";
 
-const MINIMAX_CHAT_URL = "https://api.minimaxi.com/v1/text/chatcompletion_v2";
+const MINIMAX_BASE_URL = "https://api.minimaxi.com/v1";
 const MINIMAX_TTS_URL  = "https://api.minimaxi.com/v1/t2a_v2";
 
 export function dailyQuoteKey(date?: Date): string {
@@ -28,7 +29,7 @@ export function dailyQuoteKey(date?: Date): string {
 // ── AI 生成金句 ────────────────────────────────────────────────────
 async function generateDailyQuote(apiKey: string): Promise<DailySutra | null> {
   const today = new Date();
-  const dateStr = today.toLocaleDateString("zh-TW", {
+  const dateStr = today.toLocaleDateString("zh-CN", {
     month: "long", day: "numeric", weekday: "long",
   });
 
@@ -48,30 +49,19 @@ async function generateDailyQuote(apiKey: string): Promise<DailySutra | null> {
 }`;
 
   try {
-    const res = await fetch(MINIMAX_CHAT_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "MiniMax-Text-01",
-        messages: [
-          { role: "system", content: "你是一位精通佛法的法師。請嚴格按用戶要求的 JSON 格式輸出。" },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.9,
-        max_tokens: 400,
-      }),
+    const client = new OpenAI({ apiKey, baseURL: MINIMAX_BASE_URL });
+
+    const completion = await client.chat.completions.create({
+      model: "MiniMax-M2.5",
+      messages: [
+        { role: "system", content: "你是一位精通佛法的法師。請嚴格按用戶要求的 JSON 格式輸出，不添加任何額外說明。" },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.9,
+      max_tokens: 400,
     });
 
-    if (!res.ok) {
-      console.error("[Cron] Chat API 失敗:", res.status, await res.text());
-      return null;
-    }
-
-    const data = await res.json();
-    const content: string = data?.choices?.[0]?.message?.content ?? "";
+    const content = completion.choices[0]?.message?.content ?? "";
     const match = content.match(/\{[\s\S]*\}/);
     if (!match) return null;
 
