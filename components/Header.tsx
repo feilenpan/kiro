@@ -11,11 +11,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/",        label: "首页",   icon: "🏠" },
-  { href: "/#mokugyo", label: "木鱼",  icon: "🪘" },
-  { href: "/ask",     label: "问佛",   icon: "🙏" },
-  { href: "/sutras",  label: "佛经",   icon: "📖" },
-  { href: "/daily",   label: "每日",   icon: "☀️" },
+  { href: "/",         label: "首頁", icon: "🏠" },
+  { href: "/#mokugyo", label: "木魚", icon: "🪘" },
+  { href: "/ask",      label: "問佛", icon: "🙏" },
+  { href: "/sutras",   label: "佛經", icon: "📖" },
+  { href: "/daily",    label: "每日", icon: "☀️" },
 ];
 
 export default function Header() {
@@ -59,7 +59,7 @@ export default function Header() {
                   letterSpacing: "0.1em",
                 }}
               >
-                佛说
+                佛說
               </span>
             </div>
           </Link>

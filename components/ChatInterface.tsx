@@ -16,12 +16,12 @@ interface Message {
 }
 
 const SUGGESTED_QUESTIONS = [
-  "我最近很焦虑，怎么办？",
-  "如何让心静下来？",
-  "《心经》是什么意思？",
-  "失眠应该如何调整？",
-  "如何与家人和睦相处？",
-  "什么是念佛？",
+  "我最近很焦慮，怎麼辦？",
+  "如何讓心靜下來？",
+  "《心經》是什麼意思？",
+  "失眠應該如何調整？",
+  "如何與家人和睦相處？",
+  "什麼是念佛？",
 ];
 
 const USER_ID_KEY = "foshuoUserId";
@@ -85,17 +85,30 @@ export default function ChatInterface() {
     }
   }, []);
 
-  // 历史恢复时自动滚到最新一条（底部）
+  // 歷史恢復時，只在聊天列表容器內滾動，不影響頁面外層
   useEffect(() => {
     if (isRestoredHistory && messages.length > 0) {
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "auto" }), 50);
+      setTimeout(() => {
+        const el = bottomRef.current;
+        if (!el) return;
+        // 只滾動最近的可捲動祖先（聊天 div），不觸發 window/body 滾動
+        const container = el.closest("[data-chat-scroll]") as HTMLElement | null;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 50);
     }
   }, [isRestoredHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 自动滚动到底部
+  // 新消息時，只在聊天容器內部滾動
   useEffect(() => {
     if (!isRestoredHistory) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const el = bottomRef.current;
+      if (!el) return;
+      const container = el.closest("[data-chat-scroll]") as HTMLElement | null;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
   }, [messages, isRestoredHistory]);
 
@@ -140,7 +153,7 @@ export default function ChatInterface() {
     } catch {
       setMessages([
         ...newMessages,
-        { role: "assistant", content: "阿弥陀佛，网络不通畅，请稍后再试。🙏" },
+        { role: "assistant", content: "阿彌陀佛，網絡不通暢，請稍後再試。🙏" },
       ]);
     } finally {
       setIsLoading(false);
@@ -157,104 +170,74 @@ export default function ChatInterface() {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* 「续上次对话」提示条 — 从历史恢复时显示 */}
+      {/* 「續上次對話」提示條 — 從歷史恢復時顯示 */}
       {isRestoredHistory && messages.length > 0 && (
         <div
           className="fade-in"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
+            display: "flex", alignItems: "center", gap: "0.4rem",
             padding: "0.4rem 0.75rem",
             background: "rgba(229, 171, 40, 0.1)",
             border: "1px solid rgba(201, 138, 22, 0.2)",
-            borderRadius: "0.5rem",
-            fontSize: "0.8rem",
-            color: "#a06810",
-            fontFamily: "'Noto Sans SC', sans-serif",
+            borderRadius: "0.5rem", fontSize: "0.8rem", color: "#a06810",
+            fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
             marginBottom: "0.75rem",
           }}
         >
           <span>🕰️</span>
-          <span>续上次对话{resumeDate ? `（${resumeDate}）` : ""} — 法师记得您之前说的话</span>
+          <span>續上次對話{resumeDate ? `（${resumeDate}）` : ""} — 法師記得您之前說的話</span>
         </div>
       )}
 
-      {/* 记忆提示（有过对话才显示，且不是恢复状态）*/}
+      {/* 記憶提示（有過對話才顯示，且不是恢復狀態）*/}
       {hasMemory && !isRestoredHistory && (
         <div
           className="fade-in"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
+            display: "flex", alignItems: "center", gap: "0.4rem",
             padding: "0.4rem 0.75rem",
             background: "rgba(229, 171, 40, 0.1)",
-            borderRadius: "0.5rem",
-            fontSize: "0.8rem",
-            color: "#a06810",
-            fontFamily: "'Noto Sans SC', sans-serif",
+            borderRadius: "0.5rem", fontSize: "0.8rem", color: "#a06810",
+            fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
             marginBottom: "0.75rem",
           }}
         >
           <span>🧠</span>
-          <span>法师已记住您的情况，下次对话将延续关怀</span>
+          <span>法師已記住您的情況，下次對話將延續關懷</span>
         </div>
       )}
 
-      {/* 建议问题（首次显示）*/}
+      {/* 建議問題（首次顯示）*/}
       {messages.length === 0 && (
         <div style={{ marginBottom: "1.5rem" }}>
-          <p
-            style={{
-              fontFamily: "'Noto Sans SC', sans-serif",
-              fontSize: "0.95rem",
-              color: "#8a5a2f",
-              marginBottom: "0.75rem",
-              textAlign: "center",
-            }}
-          >
-            🙏 您有什么想请教的？
+          <p style={{
+            fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+            fontSize: "0.95rem", color: "#8a5a2f",
+            marginBottom: "0.75rem", textAlign: "center",
+          }}>
+            🙏 您有什麼想請教的？
           </p>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "0.5rem",
-              justifyContent: "center",
-            }}
-          >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center" }}>
             {SUGGESTED_QUESTIONS.map((q) => (
-              <button
-                key={q}
-                onClick={() => sendMessage(q)}
-                style={{
-                  padding: "0.5rem 1rem",
-                  background: "rgba(249, 237, 204, 0.8)",
-                  border: "1px solid rgba(201, 138, 22, 0.35)",
-                  borderRadius: "9999px",
-                  fontSize: "0.95rem",
-                  color: "#7a4c10",
-                  fontFamily: "'Noto Sans SC', sans-serif",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(229, 171, 40, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(249, 237, 204, 0.8)";
-                }}
-              >
-                {q}
-              </button>
+              <button key={q} onClick={() => sendMessage(q)} style={{
+                padding: "0.5rem 1rem",
+                background: "rgba(249, 237, 204, 0.8)",
+                border: "1px solid rgba(201, 138, 22, 0.35)",
+                borderRadius: "9999px", fontSize: "0.95rem", color: "#7a4c10",
+                fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+                cursor: "pointer", transition: "all 0.2s",
+              }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(229, 171, 40, 0.2)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(249, 237, 204, 0.8)"; }}
+              >{q}</button>
             ))}
           </div>
         </div>
       )}
 
-      {/* 对话列表 */}
+      {/* 對話列表 */}
       <div
+        data-chat-scroll="true"
         style={{
           overflowY: "auto",
           display: "flex",
@@ -348,15 +331,11 @@ export default function ChatInterface() {
                 className="pulse-gold"
               >•</span>
               <span style={{ color: "#c98a16", fontSize: "1.5rem", lineHeight: 1, animationDelay: "0.4s" }}>•</span>
-              <span
-                style={{
-                  marginLeft: "0.5rem",
-                  fontSize: "0.9rem",
-                  color: "#8a5a2f",
-                  fontFamily: "'Noto Sans SC', sans-serif",
-                }}
-              >
-                法师正在思考…
+              <span style={{
+                marginLeft: "0.5rem", fontSize: "0.9rem", color: "#8a5a2f",
+                fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+              }}>
+                法師正在思考…
               </span>
             </div>
           </div>
@@ -365,82 +344,54 @@ export default function ChatInterface() {
         <div ref={bottomRef} />
       </div>
 
-      {/* 模拟回答提示 */}
+      {/* 模擬回答提示 */}
       {isMock && (
-        <div
-          style={{
-            padding: "0.4rem 0.75rem",
-            background: "rgba(249, 237, 204, 0.7)",
-            borderRadius: "0.5rem",
-            fontSize: "0.8rem",
-            color: "#a06810",
-            fontFamily: "'Noto Sans SC', sans-serif",
-            marginBottom: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          ℹ️ 目前使用示范回答，配置 MINIMAX_API_KEY 后可启用完整 AI 功能
+        <div style={{
+          padding: "0.4rem 0.75rem", background: "rgba(249, 237, 204, 0.7)",
+          borderRadius: "0.5rem", fontSize: "0.8rem", color: "#a06810",
+          fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+          marginBottom: "0.75rem", textAlign: "center",
+        }}>
+          ℹ️ 目前使用示範回答，配置 MINIMAX_API_KEY 後可啟用完整 AI 功能
         </div>
       )}
 
-      {/* 输入区域 */}
+      {/* 輸入區域 */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
         <textarea
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="请说出您的烦恼或问题…"
+          placeholder="請說出您的煩惱或問題…"
           rows={2}
           className="zen-input"
-          style={{
-            resize: "none",
-            lineHeight: 1.7,
-            fontSize: "1rem",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
+          style={{ resize: "none", lineHeight: 1.7, fontSize: "1rem", width: "100%", boxSizing: "border-box" }}
           disabled={isLoading}
         />
         <button
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || isLoading}
           className="btn-gold"
-          style={{
-            width: "100%",
-            padding: "0.85rem 1rem",
-            fontSize: "1.05rem",
-            letterSpacing: "0.05em",
-            boxSizing: "border-box",
-          }}
+          style={{ width: "100%", padding: "0.85rem 1rem", fontSize: "1.05rem", letterSpacing: "0.05em", boxSizing: "border-box" }}
         >
-          {isLoading ? "⏳ 法师思考中…" : "🙏 问佛"}
+          {isLoading ? "⏳ 法師思考中…" : "🙏 問佛"}
         </button>
 
-        {/* 清空历史（有对话记录时显示）*/}
+        {/* 清空歷史（有對話記錄時顯示）*/}
         {messages.length > 0 && (
           <button
-            onClick={() => {
-              clearChatHistory();
-              setMessages([]);
-              setIsRestoredHistory(false);
-              setHasMemory(false);
-            }}
+            onClick={() => { clearChatHistory(); setMessages([]); setIsRestoredHistory(false); setHasMemory(false); }}
             disabled={isLoading}
             style={{
-              width: "100%",
-              padding: "0.5rem",
-              background: "transparent",
-              border: "1px solid rgba(201, 138, 22, 0.25)",
-              borderRadius: "0.5rem",
-              fontSize: "0.85rem",
-              color: "#a06810",
-              fontFamily: "'Noto Sans SC', sans-serif",
-              cursor: "pointer",
-              opacity: 0.7,
+              width: "100%", padding: "0.5rem", background: "transparent",
+              border: "1px solid rgba(201, 138, 22, 0.25)", borderRadius: "0.5rem",
+              fontSize: "0.85rem", color: "#a06810",
+              fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+              cursor: "pointer", opacity: 0.7,
             }}
           >
-            🗑️ 清空对话记录
+            🗑️ 清空對話記錄
           </button>
         )}
       </div>

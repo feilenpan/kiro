@@ -39,7 +39,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
           display: "inline-block", padding: "0.25rem 0.9rem",
           background: "linear-gradient(135deg, #f9edcc, #f3d88a)",
           borderRadius: "9999px", fontSize: "0.85rem", color: "#a06810",
-          fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 500, letterSpacing: "0.05em",
+          fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif", fontWeight: 500, letterSpacing: "0.05em",
         }}>
           ☀️ 今日金句
         </span>
@@ -47,7 +47,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
 
       {/* 金句正文 */}
       <blockquote style={{
-        fontFamily: "'Noto Serif SC', serif",
+        fontFamily: "'Noto Serif TC','Noto Serif SC',serif",
         fontSize: "clamp(1rem, 4vw, 1.25rem)",
         lineHeight: 1.9, color: "#2c1810", margin: "0 0 1rem 0", fontWeight: 500,
       }}>
@@ -57,7 +57,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
       {/* 出處 */}
       <p style={{
         fontSize: "0.9rem", color: "#a06810",
-        fontFamily: "'Noto Sans SC', sans-serif", marginBottom: "1.5rem",
+        fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif", marginBottom: "1.5rem",
       }}>
         —— {sutra.source}
       </p>
@@ -100,7 +100,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
           padding: "1rem 1.25rem", textAlign: "left",
         }}>
           <p style={{
-            fontFamily: "'Noto Sans SC', sans-serif", fontSize: "1rem",
+            fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif", fontSize: "1rem",
             lineHeight: 1.8, color: "#5c3d2e", margin: 0,
           }}>
             💡 {sutra.explanation}

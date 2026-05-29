@@ -4,6 +4,7 @@ import ChatInterface from "@/components/ChatInterface";
 import { FeatureCards, SutraCategories } from "@/components/FeatureCards";
 import MokyugyoHero from "@/components/MokyugyoHero";
 import { getTodaySutra, getTodayAISutra, getDailyAudioUrl } from "@/lib/sutras";
+import ScrollRestore from "@/components/ScrollRestore";
 
 export default async function HomePage() {
   const aiSutra    = await getTodayAISutra();
@@ -12,6 +13,8 @@ export default async function HomePage() {
 
   return (
     <>
+      {/* 每次進入頁面強制滾到頂部，防止瀏覽器記住上次位置 */}
+      <ScrollRestore />
       <Header />
 
       {/*
@@ -20,12 +23,15 @@ export default async function HomePage() {
         - 往下滑才進入第二屏（今日金句等內容）
         - mandatory：滑動必須停在 snap 點，不會停在中間
       */}
-      <div style={{
-        overflowY: "scroll",
-        height: "calc(100svh - 64px)",
-        scrollSnapType: "y mandatory",
-        WebkitOverflowScrolling: "touch",
-      }}>
+      <div
+        data-snap-container="true"
+        style={{
+          overflowY: "scroll",
+          height: "calc(100svh - 64px)",
+          scrollSnapType: "y mandatory",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
 
         {/* ── 第一屏：木魚（snap 點）── */}
         <div style={{ scrollSnapAlign: "start", scrollSnapStop: "always" }}>
