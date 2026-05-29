@@ -2,161 +2,296 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ── 飄字文字池（繁體）────────────────────────────────────────────
+// ── 飄字文字池 ────────────────────────────────────────────────────
 const FLOAT_TEXTS = [
   "阿彌陀佛", "南無佛", "般若", "菩提", "涅槃", "慈悲",
   "空", "禪", "悟", "淨", "佛", "法", "僧",
   "🙏", "☸️", "🪷", "📿",
   "諸行無常", "色即是空", "放下", "自在", "清淨",
-  "善哉", "功德", "迴向", "本來無一物",
+  "善哉", "功德", "迴向",
 ];
-
 const MILESTONES = [10, 21, 36, 49, 72, 108, 180, 360, 500, 1000];
-
-// ── 樂器類型 ──────────────────────────────────────────────────────
 type Instrument = "mokugyo" | "bell";
 
-// ── 音效合成：木魚（改良版，更真實的木質感）─────────────────────
+// ── 木魚音效：白噪聲 + 諧振濾波器，模擬真實木頭中空共鳴 ────────
 function playMokyugyo(ctx: AudioContext) {
   const now = ctx.currentTime;
+  const sr = ctx.sampleRate;
 
-  // 1. 衝擊瞬態（Click transient）— 模擬木棒敲擊的"咄"
-  const clickBuf = ctx.createBuffer(1, ctx.sampleRate * 0.01, ctx.sampleRate);
-  const clickData = clickBuf.getChannelData(0);
-  for (let i = 0; i < clickData.length; i++) {
-    clickData[i] = (Math.random() * 2 - 1) * (1 - i / clickData.length);
+  // === 木質衝擊核心：短時白噪聲通過帶通濾波，頻率快速下掃 ===
+  const impulseDur = 0.065;
+  const buf = ctx.createBuffer(1, Math.ceil(sr * impulseDur), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const env = Math.exp(-i / (sr * 0.018));  // 快速指數衰減
+    data[i] = (Math.random() * 2 - 1) * env;
   }
-  const clickSrc = ctx.createBufferSource();
-  clickSrc.buffer = clickBuf;
-  const clickFilter = ctx.createBiquadFilter();
-  clickFilter.type = "highpass";
-  clickFilter.frequency.value = 1200;
-  const clickGain = ctx.createGain();
-  clickGain.gain.setValueAtTime(0.7, now);
-  clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.01);
-  clickSrc.connect(clickFilter);
-  clickFilter.connect(clickGain);
-  clickGain.connect(ctx.destination);
-  clickSrc.start(now);
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf;
 
-  // 2. 主體共鳴音（低頻 + 中頻疊加，模擬中空木頭）
-  [[180, 0.8, 0.18], [360, 0.4, 0.10], [540, 0.2, 0.07]].forEach(([freq, gain0, decay]) => {
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    const f = ctx.createBiquadFilter();
-    osc.type = "sine";
-    osc.frequency.value = freq;
-    f.type = "bandpass";
-    f.frequency.value = freq;
-    f.Q.value = 8;
-    g.gain.setValueAtTime(gain0, now + 0.002);
-    g.gain.exponentialRampToValueAtTime(0.001, now + decay);
-    osc.connect(f); f.connect(g); g.connect(ctx.destination);
-    osc.start(now); osc.stop(now + decay + 0.05);
-  });
+  // 帶通濾波：中心頻率從 800Hz 下掃到 320Hz，模擬木頭共鳴腔
+  const bp = ctx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.setValueAtTime(820, now);
+  bp.frequency.exponentialRampToValueAtTime(320, now + 0.055);
+  bp.Q.value = 12;
 
-  // 3. 木質高頻泛音（"篤"的木感）
-  const osc3 = ctx.createOscillator();
-  const g3 = ctx.createGain();
-  osc3.type = "triangle";
-  osc3.frequency.setValueAtTime(900, now);
-  osc3.frequency.exponentialRampToValueAtTime(600, now + 0.04);
-  g3.gain.setValueAtTime(0.25, now);
-  g3.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-  osc3.connect(g3); g3.connect(ctx.destination);
-  osc3.start(now); osc3.stop(now + 0.08);
-}
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(3.0, now);
+  ng.gain.exponentialRampToValueAtTime(0.001, now + impulseDur);
 
-// ── 音效合成：銅鐘（真實磬聲，長尾衰減）────────────────────────
-function playBell(ctx: AudioContext, isStrike = false) {
-  const now = ctx.currentTime;
-  const vol = isStrike ? 1.0 : 0.6;
-  // 銅鐘頻率比（基音 + 非整數泛音，產生金屬感）
-  const partials: [number, number, number][] = [
-    [220, vol * 0.9, 4.5],
-    [275, vol * 0.5, 3.2],
-    [440, vol * 0.35, 2.8],
-    [660, vol * 0.2, 2.0],
-    [880, vol * 0.1, 1.2],
-    [1320, vol * 0.05, 0.8],
+  noise.connect(bp);
+  bp.connect(ng);
+  ng.connect(ctx.destination);
+  noise.start(now);
+
+  // === 低頻體鳴：模擬中空木頭的低頻共振「嗡」尾音 ===
+  const bodyFreqs: [number, number, number][] = [
+    [165, 0.55, 0.22],
+    [330, 0.25, 0.12],
+    [495, 0.12, 0.07],
   ];
-  partials.forEach(([freq, amp, dur]) => {
-    const osc = ctx.createOscillator();
+  bodyFreqs.forEach(([freq, amp, dur]) => {
+    const o = ctx.createOscillator();
     const g = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq;
+    o.type = "sine";
+    o.frequency.value = freq;
     g.gain.setValueAtTime(0, now);
     g.gain.linearRampToValueAtTime(amp, now + 0.003);
     g.gain.exponentialRampToValueAtTime(0.001, now + dur);
-    osc.connect(g); g.connect(ctx.destination);
-    osc.start(now); osc.stop(now + dur + 0.1);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(now); o.stop(now + dur + 0.05);
   });
-  // 敲擊噪聲（金屬碰撞）
-  if (isStrike) {
-    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.015, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 3000; f.Q.value = 1;
+
+  // === 硬質打擊感：極短高頻衝擊（"噠"的點） ===
+  const clickBuf = ctx.createBuffer(1, Math.ceil(sr * 0.005), sr);
+  const cd = clickBuf.getChannelData(0);
+  for (let i = 0; i < cd.length; i++) cd[i] = (Math.random() * 2 - 1) * (1 - i / cd.length);
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = "highpass"; hpf.frequency.value = 2500;
+  const cg = ctx.createGain();
+  cg.gain.setValueAtTime(1.2, now);
+  cg.gain.exponentialRampToValueAtTime(0.001, now + 0.005);
+  click.connect(hpf); hpf.connect(cg); cg.connect(ctx.destination);
+  click.start(now);
+}
+
+// ── 銅鐘音效：非整數泛音疊加，真實金屬鐘聲 ─────────────────────
+function playBell(ctx: AudioContext, isStrike = false) {
+  const now = ctx.currentTime;
+  const vol = isStrike ? 1.0 : 0.55;
+  // 真實銅鐘泛音比（非整數倍，這才是金屬感的來源）
+  const partials: [number, number, number][] = [
+    [220,  vol * 1.0,  5.0],
+    [293,  vol * 0.6,  3.8],
+    [440,  vol * 0.4,  3.0],
+    [587,  vol * 0.22, 2.2],
+    [880,  vol * 0.12, 1.5],
+    [1174, vol * 0.06, 0.9],
+    [1760, vol * 0.03, 0.5],
+  ];
+  partials.forEach(([freq, amp, dur]) => {
+    const o = ctx.createOscillator();
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.3, now);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
-    src.connect(f); f.connect(g); g.connect(ctx.destination);
-    src.start(now);
+    o.type = "sine";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(amp, now + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(now); o.stop(now + dur + 0.1);
+  });
+  // 撞擊瞬態
+  if (isStrike) {
+    const sr = ctx.sampleRate;
+    const b = ctx.createBuffer(1, Math.ceil(sr * 0.012), sr);
+    const d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.004));
+    const s = ctx.createBufferSource(); s.buffer = b;
+    const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 4000; f.Q.value = 1.5;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.5, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+    s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(now);
   }
 }
 
-
 // ── 飄字粒子 ──────────────────────────────────────────────────────
-interface FloatParticle {
-  id: number; text: string; x: number;
-  size: number; duration: number; delay: number; rotate: number; color: string;
-}
-const COLORS = ["#c98a16", "#e5ab28", "#a06810", "#c98a16", "#e5ab28", "#8b2252", "#1a5a8a"];
+interface Particle { id: number; text: string; x: number; size: number; dur: number; delay: number; rot: number; color: string; }
+const COLORS = ["#c98a16","#e5ab28","#a06810","#c98a16","#e5ab28","#7a3a8a","#1a5a8a"];
 let _pid = 0;
-function makeParticle(): FloatParticle {
-  return {
-    id: _pid++,
-    text: FLOAT_TEXTS[Math.floor(Math.random() * FLOAT_TEXTS.length)],
-    x: 10 + Math.random() * 80,
-    size: 13 + Math.floor(Math.random() * 18),
-    duration: 1600 + Math.random() * 1200,
-    delay: Math.random() * 150,
-    rotate: -35 + Math.random() * 70,
-    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-  };
+const mkParticle = (): Particle => ({
+  id: _pid++,
+  text: FLOAT_TEXTS[Math.floor(Math.random() * FLOAT_TEXTS.length)],
+  x: 8 + Math.random() * 84, size: 14 + Math.floor(Math.random() * 18),
+  dur: 1800 + Math.random() * 1400, delay: Math.random() * 120,
+  rot: -40 + Math.random() * 80,
+  color: COLORS[Math.floor(Math.random() * COLORS.length)],
+});
+
+function FloatingChar({ p }: { p: Particle }) {
+  return (
+    <div style={{
+      position: "absolute", left: `${p.x}%`, bottom: "38%",
+      fontSize: `${p.size}px`, color: p.color,
+      fontFamily: "'Noto Serif TC','Noto Serif SC',serif", fontWeight: 700,
+      pointerEvents: "none", zIndex: 5, whiteSpace: "nowrap",
+      opacity: 0, textShadow: "0 1px 8px rgba(201,138,22,0.3)",
+      animation: `floatUp ${p.dur}ms ease-out ${p.delay}ms both`,
+      transform: `rotate(${p.rot}deg)`,
+    }}>{p.text}</div>
+  );
 }
+
+
+// ── 木魚 SVG（放大版，加眨眼 + 木棰搖擺動畫）────────────────────
+function MokyugyoSVG({ size = 260, golden = false, idle = true }: { size?: number; golden?: boolean; idle?: boolean }) {
+  const body = golden ? "#c98a16" : "#7B3A10";
+  const shad = golden ? "#9a6010" : "#4A2008";
+  const lite = golden ? "#f5d060" : "#C4622A";
+  const eyeW = golden ? "#fff8e1" : "#FFF3E0";
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* 外發光暈（idle 時呼吸） */}
+      <ellipse cx="100" cy="112" rx="82" ry="66"
+        fill={golden ? "rgba(229,171,40,0.15)" : "rgba(201,138,22,0.08)"}
+        style={{ animationName: idle ? "mokoGlow" : "none", animationDuration: "3.5s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" }} />
+      {/* 第二層光暈 */}
+      {idle && <ellipse cx="100" cy="112" rx="72" ry="58"
+        fill="rgba(229,171,40,0.06)"
+        style={{ animationName: "mokoGlow", animationDuration: "3.5s", animationDelay: "0.8s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" }} />}
+      {/* 陰影 */}
+      <ellipse cx="103" cy="120" rx="67" ry="54" fill="rgba(0,0,0,0.14)" />
+      {/* 主體 */}
+      <ellipse cx="100" cy="113" rx="67" ry="54" fill={body} />
+      {/* 高光 */}
+      <ellipse cx="82" cy="89" rx="30" ry="19" fill={lite} opacity="0.36" />
+      {/* 中縫 */}
+      <path d="M100 62 C93 77,91 91,92 113 C93 133,95 144,100 156 C105 144,107 133,108 113 C109 91,107 77,100 62Z" fill={shad} opacity="0.80" />
+      <path d="M100 67 C98 79,97 91,97.5 113 C98 133,99 142,100 154" stroke={lite} strokeWidth="1.5" opacity="0.42" strokeLinecap="round" />
+
+      {/* 左眼（含眨眼動畫） */}
+      <ellipse cx="70" cy="99" rx="9" ry="10" fill={shad} />
+      <ellipse cx="70" cy="99" rx="6" ry="7" fill={eyeW}
+        style={idle ? { animationName: "eyeBlink", animationDuration: "4s", animationDelay: "1s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" } : {}} />
+      <ellipse cx="71" cy="98" rx="2.5" ry="3" fill={shad}
+        style={idle ? { animationName: "eyeBlink", animationDuration: "4s", animationDelay: "1s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" } : {}} />
+      <ellipse cx="72" cy="97" rx="1" ry="1" fill="white" opacity="0.9" />
+      {/* 右眼 */}
+      <ellipse cx="130" cy="99" rx="9" ry="10" fill={shad} />
+      <ellipse cx="130" cy="99" rx="6" ry="7" fill={eyeW}
+        style={idle ? { animationName: "eyeBlink", animationDuration: "4s", animationDelay: "1s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" } : {}} />
+      <ellipse cx="131" cy="98" rx="2.5" ry="3" fill={shad}
+        style={idle ? { animationName: "eyeBlink", animationDuration: "4s", animationDelay: "1s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" } : {}} />
+      <ellipse cx="132" cy="97" rx="1" ry="1" fill="white" opacity="0.9" />
+      {/* 嘴 */}
+      <path d="M87 129 Q100 140 113 129" stroke={shad} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      {/* 頂部榫頭 */}
+      <rect x="89" y="42" width="22" height="22" rx="5" fill={shad} />
+      <rect x="92" y="39" width="16" height="9" rx="4" fill={body} />
+      <rect x="94" y="37" width="12" height="7" rx="3" fill={lite} opacity="0.5" />
+      {/* 木棰（idle 時自動搖擺吸引點擊） */}
+      <g style={idle ? {
+        transformOrigin: "148px 28px",
+        animationName: "malletSwing",
+        animationDuration: "2.4s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite",
+      } : { transform: "rotate(38deg)", transformOrigin: "148px 28px" }}
+        transform="rotate(38, 148, 28)">
+        <ellipse cx="148" cy="28" rx="13" ry="11" fill={shad} />
+        <ellipse cx="146" cy="26" rx="8" ry="7" fill={lite} opacity="0.42" />
+        <rect x="144" y="38" width="8" height="44" rx="4" fill={golden ? "#9a6010" : "#5A2E10"} />
+        <rect x="146" y="40" width="3" height="40" rx="2" fill={lite} opacity="0.26" />
+      </g>
+    </svg>
+  );
+}
+
+// ── 銅鐘 SVG（放大版） ────────────────────────────────────────────
+function BellSVG({ size = 260, golden = false, pressing = false, idle = true }: { size?: number; golden?: boolean; pressing?: boolean; idle?: boolean }) {
+  const body = golden ? "#c98a16" : "#8B6914";
+  const shad = golden ? "#9a6010" : "#5C4209";
+  const lite = golden ? "#f5d060" : "#D4A832";
+  const rim  = golden ? "#a06810" : "#6B4E0A";
+  return (
+    <svg width={size} height={Math.round(size * 1.08)} viewBox="0 0 200 216" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* 掛繩 */}
+      <rect x="96" y="6" width="8" height="24" rx="4" fill={shad} />
+      <ellipse cx="100" cy="6" rx="11" ry="6" fill={shad} />
+      <ellipse cx="100" cy="6" rx="8" ry="4" fill={lite} opacity="0.45" />
+
+      {/* 光暈（idle 呼吸） */}
+      {idle && <ellipse cx="100" cy="120" rx="88" ry="76"
+        fill={golden ? "rgba(229,171,40,0.13)" : "rgba(201,138,22,0.07)"}
+        style={{ animationName: "mokoGlow", animationDuration: "4s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite" }} />}
+
+      {/* 鐘身陰影 */}
+      <path d="M40 158 Q38 174 100 182 Q162 174 160 158 L154 74 Q150 40 100 38 Q50 40 46 74 Z"
+        fill="rgba(0,0,0,0.15)" transform="translate(2,4)" />
+      {/* 鐘身 */}
+      <path d="M40 158 Q38 172 100 180 Q162 172 160 158 L154 74 Q150 40 100 38 Q50 40 46 74 Z" fill={body} />
+      {/* 左側高光 */}
+      <path d="M56 72 Q54 104 58 144 Q68 108 66 70 Z" fill={lite} opacity="0.28" />
+      {/* 三道橫紋 */}
+      {[94,114,134].map((y,i)=>(
+        <path key={i} d={`M${50+i*2} ${y} Q100 ${y+3} ${150-i*2} ${y}`}
+          stroke={shad} strokeWidth="2.2" fill="none" opacity="0.45" />
+      ))}
+      {/* 中央蓮紋圈 + 佛字 */}
+      <circle cx="100" cy="116" r="18" fill="none" stroke={lite} strokeWidth="1.8" opacity="0.5" />
+      <text x="100" y="123" textAnchor="middle" fontSize="17" fill={lite} opacity="0.68" fontFamily="serif">佛</text>
+      {/* 底邊加厚 */}
+      <path d="M36 158 Q34 180 100 188 Q166 180 164 158 L160 155 Q157 175 100 182 Q43 175 40 155 Z" fill={rim} />
+      <path d="M40 158 Q38 172 100 180 Q162 172 160 158" stroke={lite} strokeWidth="1.5" fill="none" opacity="0.38" />
+
+      {/* 金光模式外圈 */}
+      {golden && <ellipse cx="100" cy="114" rx="92" ry="82" fill="none" stroke="#e5ab28" strokeWidth="4" opacity="0.22" />}
+
+      {/* 鐘槌（idle 時自動搖擺） */}
+      <g style={idle && !pressing ? {
+        transformOrigin: "155px 116px",
+        animationName: "malletSwingBell",
+        animationDuration: "3s", animationTimingFunction: "ease-in-out", animationIterationCount: "infinite",
+      } : { transform: pressing ? "rotate(-12deg)" : "rotate(-22deg)", transformOrigin: "155px 116px" }}
+        transform={pressing ? "rotate(-12, 155, 116)" : "rotate(-22, 155, 116)"}>
+        <rect x="152" y="82" width="6" height="38" rx="3" fill={shad} />
+        <ellipse cx="155" cy="80" rx="9" ry="8" fill={shad} />
+        <ellipse cx="153" cy="78" rx="5.5" ry="5" fill={lite} opacity="0.38" />
+        <rect x="153.5" y="84" width="3" height="34" rx="1.5" fill={lite} opacity="0.2" />
+      </g>
+    </svg>
+  );
+}
+
 
 // ── 主組件 ────────────────────────────────────────────────────────
 export default function MokyugyoHero() {
-  // 隨機樂器（客戶端渲染後才決定，避免 SSR 不一致）
   const [instrument, setInstrument] = useState<Instrument | null>(null);
-  const [count, setCount] = useState(0);
-  const [pressing, setPressing] = useState(false);
-  const [ripple, setRipple] = useState(false);          // 敲擊漣漪
-  const [particles, setParticles] = useState<FloatParticle[]>([]);
-  const [milestone, setMilestone] = useState<string | null>(null);
-  const [golden, setGolden] = useState(false);
-  const [bellCooldown, setBellCooldown] = useState(false); // 鐘：餘音期間禁止再敲
+  const [count,      setCount]      = useState(0);
+  const [pressing,   setPressing]   = useState(false);
+  const [particles,  setParticles]  = useState<Particle[]>([]);
+  const [milestone,  setMilestone]  = useState<string | null>(null);
+  const [golden,     setGolden]     = useState(false);
+  const [cooldown,   setCooldown]   = useState(false);
+  // ripple key — 每次敲擊重置，觸發 re-mount 重播動畫
+  const [rippleKey,  setRippleKey]  = useState(0);
+  const [showRipple, setShowRipple] = useState(false);
 
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const audioCtxRef    = useRef<AudioContext | null>(null);
   const milestoneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTap = useRef(0);
+  const lastTap        = useRef(0);
 
-  // 客戶端初始化：隨機樂器 + 恢復功德數
+  // 客戶端初始化
   useEffect(() => {
     setInstrument(Math.random() < 0.5 ? "mokugyo" : "bell");
     try {
       const saved = localStorage.getItem("foshuo_merit_count");
       if (saved) setCount(parseInt(saved, 10) || 0);
-    } catch { /* ignore */ }
+    } catch { /**/ }
   }, []);
 
-  // 清理粒子
+  // 粒子上限
   useEffect(() => {
-    if (particles.length > 50) setParticles(p => p.slice(-35));
+    if (particles.length > 55) setParticles(p => p.slice(-40));
   }, [particles]);
 
   const getCtx = useCallback(() => {
@@ -169,28 +304,28 @@ export default function MokyugyoHero() {
   }, []);
 
   const handleStrike = useCallback(() => {
-    if (instrument === "bell" && bellCooldown) return; // 鐘：餘音期間鎖定
+    if (cooldown) return;
     const now = Date.now();
-    if (now - lastTap.current < 80) return;
+    if (now - lastTap.current < 85) return;
     lastTap.current = now;
 
-    const newCount = count + 1;
-    setCount(newCount);
-    try { localStorage.setItem("foshuo_merit_count", String(newCount)); } catch { /**/ }
+    const nc = count + 1;
+    setCount(nc);
+    try { localStorage.setItem("foshuo_merit_count", String(nc)); } catch { /**/ }
 
-    // 敲擊動效
+    // 按壓動效
     setPressing(true);
-    setRipple(false);
-    requestAnimationFrame(() => { setTimeout(() => setRipple(true), 10); });
-    setTimeout(() => { setPressing(false); }, instrument === "bell" ? 180 : 110);
+    setRippleKey(k => k + 1);
+    setShowRipple(true);
+    setTimeout(() => { setPressing(false); setShowRipple(false); }, instrument === "bell" ? 200 : 120);
 
-    // 鐘：敲後禁止 2.5 秒（讓鐘聲有尊嚴地響完）
+    // 銅鐘餘音冷卻
     if (instrument === "bell") {
-      setBellCooldown(true);
-      setTimeout(() => setBellCooldown(false), 2500);
+      setCooldown(true);
+      setTimeout(() => setCooldown(false), 2800);
     }
 
-    if (navigator.vibrate) navigator.vibrate(instrument === "bell" ? [25, 0, 15] : 18);
+    if (navigator.vibrate) navigator.vibrate(instrument === "bell" ? [30, 0, 18] : 20);
 
     // 音效
     try {
@@ -199,36 +334,31 @@ export default function MokyugyoHero() {
       else playBell(ctx, true);
     } catch { /**/ }
 
-    // 飄字（木魚 1~2 個，鐘 2~4 個）
-    const n = instrument === "bell" ? 2 + Math.floor(Math.random() * 3) : 1 + Math.floor(Math.random() * 2);
-    setParticles(p => [...p, ...Array.from({ length: n }, makeParticle)]);
+    // 飄字
+    const n = instrument === "bell" ? 3 + Math.floor(Math.random() * 3) : 1 + Math.floor(Math.random() * 2);
+    setParticles(p => [...p, ...Array.from({ length: n }, mkParticle)]);
 
     // 里程碑
-    if (MILESTONES.includes(newCount)) {
-      try {
-        const ctx = getCtx();
-        playBell(ctx, false);
-      } catch { /**/ }
+    if (MILESTONES.includes(nc)) {
+      try { playBell(getCtx(), false); } catch { /**/ }
       setGolden(true);
-      const msg = newCount === 108 ? "🌟 一百單八煩惱皆消！功德圓滿！"
-        : newCount === 1000 ? "🏆 千聲功德，殊勝無比！"
-        : `✨ 已敲 ${newCount} 下，功德殊勝！`;
+      const msg = nc === 108 ? "🌟 一百單八煩惱皆消！功德圓滿！"
+        : nc === 1000 ? "🏆 千聲功德，殊勝無比！"
+        : `✨ 已敲 ${nc} 下，功德殊勝！`;
       setMilestone(msg);
       if (milestoneTimer.current) clearTimeout(milestoneTimer.current);
-      milestoneTimer.current = setTimeout(() => { setMilestone(null); setGolden(false); }, 3200);
+      milestoneTimer.current = setTimeout(() => { setMilestone(null); setGolden(false); }, 3500);
     }
-  }, [count, instrument, bellCooldown, getCtx]);
+  }, [count, instrument, cooldown, getCtx]);
 
-  // 鍵盤支持
+  // 鍵盤
   useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); handleStrike(); }
-    };
+    const h = (e: KeyboardEvent) => { if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); handleStrike(); } };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [handleStrike]);
 
-  const meritLabel = () => {
+  const label = () => {
     if (!instrument) return "";
     if (count === 0) return instrument === "bell" ? "敲鐘祈福，聲聞十方" : "敲木魚，積累功德";
     if (count < 10)  return "功德已起，繼續吧 🙏";
@@ -237,344 +367,189 @@ export default function MokyugyoHero() {
     return `今日功德：${count} 聲`;
   };
 
-  const isLarge = typeof window !== "undefined" && window.innerWidth > 380;
-  const svgSize = isLarge ? 210 : 175;
+  // SVG 尺寸：手機 260，大屏 310
+  const svgSize = typeof window !== "undefined" && window.innerWidth >= 420 ? 310 : 260;
+  const isIdle  = !pressing && !golden;
 
-  // 未初始化前渲染佔位，避免閃爍
-  if (!instrument) {
-    return (
-      <div style={{
-        height: "calc(100svh - 64px)", display: "flex", alignItems: "center",
-        justifyContent: "center", background: "#f5f0e8",
-      }}>
-        <div style={{ fontSize: "4rem", animation: "floatGentle 3s ease-in-out infinite" }}>☸️</div>
-      </div>
-    );
-  }
-
+  // 佔位
+  if (!instrument) return (
+    <div style={{ height: "calc(100svh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f0e8" }}>
+      <div style={{ fontSize: "5rem", animation: "mokoFloat 3s ease-in-out infinite" }}>☸️</div>
+    </div>
+  );
 
   return (
     <div
-      ref={containerRef}
       id="mokugyo"
       style={{
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        // 100svh 减去 Header 高度，确保手机首屏完整显示
+        position: "relative", overflow: "hidden",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        // 精確佔滿視口，不允許超出，防止首屏滾動
         height: "calc(100svh - 64px)",
-        minHeight: "480px",
+        maxHeight: "calc(100svh - 64px)",
+        minHeight: "520px",
         background: golden
-          ? "radial-gradient(ellipse at 50% 60%, #fff8e1 0%, #f5f0e8 65%)"
-          : "radial-gradient(ellipse at 50% 40%, #fdf6e3 0%, #f5f0e8 70%)",
-        transition: "background 1s ease",
+          ? "radial-gradient(ellipse at 50% 55%, #fff8e1 0%, #f5f0e8 65%)"
+          : "radial-gradient(ellipse at 50% 40%, #fdf6e3 0%, #f5f0e8 72%)",
+        transition: "background 0.9s ease",
       }}
     >
-      {/* ── 背景裝飾光環（常態呼吸動畫）── */}
+      {/* 背景呼吸光圈 */}
       <div style={{
-        position: "absolute",
-        width: "260px", height: "260px",
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(229,171,40,0.08) 0%, transparent 70%)",
+        position: "absolute", width: "300px", height: "300px", borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(229,171,40,0.09) 0%, transparent 70%)",
         animation: "heroGlow 4s ease-in-out infinite",
-        pointerEvents: "none",
-        zIndex: 1,
+        pointerEvents: "none", zIndex: 1,
       }} />
 
-      {/* ── 飄字層 ── */}
-      {particles.map(p => <FloatingChar key={p.id} particle={p} />)}
-
-      {/* ── 里程碑橫幅 ── */}
-      {milestone && (
+      {/* idle 時：旋轉粒子環（6個光點繞樂器一圈） */}
+      {isIdle && count === 0 && (
         <div style={{
-          position: "absolute", top: "8%", left: "50%",
-          transform: "translateX(-50%)",
-          background: "linear-gradient(135deg, #f9edcc, #e5ab28)",
-          border: "2px solid #c98a16", borderRadius: "9999px",
-          padding: "0.6rem 1.6rem",
-          fontFamily: "'Noto Serif TC', 'Noto Serif SC', serif",
-          fontSize: "clamp(0.85rem, 3.5vw, 1rem)",
-          color: "#2c1810", whiteSpace: "nowrap",
-          boxShadow: "0 4px 20px rgba(201,138,22,0.45)",
-          zIndex: 20, animation: "milestoneIn 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+          position: "absolute", width: "320px", height: "320px",
+          animation: "orbitRing 8s linear infinite",
+          pointerEvents: "none", zIndex: 2,
         }}>
-          {milestone}
+          {[0,60,120,180,240,300].map((deg, i) => (
+            <div key={i} style={{
+              position: "absolute", top: "50%", left: "50%",
+              width: i % 2 === 0 ? "8px" : "5px",
+              height: i % 2 === 0 ? "8px" : "5px",
+              borderRadius: "50%",
+              background: i % 3 === 0 ? "#e5ab28" : i % 3 === 1 ? "#c98a16" : "#f5d060",
+              boxShadow: "0 0 6px rgba(229,171,40,0.8)",
+              transform: `rotate(${deg}deg) translate(150px) translate(-50%,-50%)`,
+              opacity: 0.7 + (i % 3) * 0.1,
+            }} />
+          ))}
         </div>
       )}
 
-      {/* ── 頂部提示語 ── */}
-      <p style={{
-        fontFamily: "'Noto Serif TC', 'Noto Serif SC', serif",
-        fontSize: "clamp(1rem, 3.5vw, 1.2rem)",
-        color: "#8a5a2f", letterSpacing: "0.12em",
-        margin: "0 0 0.75rem 0", zIndex: 10,
-        opacity: 0.9,
-      }}>
-        {meritLabel()}
-      </p>
+      {/* 飄字 */}
+      {particles.map(p => <FloatingChar key={p.id} p={p} />)}
 
-      {/* ── 主體：樂器按鈕 ── */}
+      {/* 里程碑 */}
+      {milestone && (
+        <div style={{
+          position: "absolute", top: "7%", left: "50%", transform: "translateX(-50%)",
+          background: "linear-gradient(135deg, #f9edcc, #e5ab28)",
+          border: "2px solid #c98a16", borderRadius: "9999px",
+          padding: "0.6rem 1.8rem",
+          fontFamily: "'Noto Serif TC','Noto Serif SC',serif",
+          fontSize: "clamp(0.82rem, 3.5vw, 1rem)", color: "#2c1810", whiteSpace: "nowrap",
+          boxShadow: "0 4px 24px rgba(201,138,22,0.5)",
+          zIndex: 20, animation: "milestoneIn 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+        }}>{milestone}</div>
+      )}
+
+      {/* 提示語 */}
+      <p style={{
+        fontFamily: "'Noto Serif TC','Noto Serif SC',serif",
+        fontSize: "clamp(0.95rem, 3.5vw, 1.15rem)", color: "#8a5a2f",
+        letterSpacing: "0.12em", margin: "0 0 0.5rem 0", zIndex: 10,
+      }}>{label()}</p>
+
+      {/* 主體按鈕 */}
       <button
         onPointerDown={handleStrike}
         onContextMenu={e => e.preventDefault()}
         aria-label={instrument === "bell" ? "敲鐘" : "敲木魚"}
-        disabled={instrument === "bell" && bellCooldown}
+        disabled={cooldown}
         style={{
-          background: "none", border: "none", cursor: bellCooldown ? "not-allowed" : "pointer",
+          background: "none", border: "none",
+          cursor: cooldown ? "default" : "pointer",
           padding: 0, outline: "none",
           WebkitTapHighlightColor: "transparent",
           zIndex: 10, position: "relative",
           transform: pressing
-            ? instrument === "bell"
-              ? "scale(0.94) translateY(4px) rotate(-2deg)"
-              : "scale(0.87) translateY(7px)"
+            ? instrument === "bell" ? "scale(0.91) translateY(6px) rotate(-3deg)" : "scale(0.84) translateY(9px)"
             : "scale(1)",
-          transition: pressing ? "transform 0.07s ease-in" : "transform 0.22s cubic-bezier(0.34,1.56,0.64,1)",
+          transition: pressing ? "transform 0.07s ease-in" : "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
           filter: golden
-            ? "drop-shadow(0 0 28px rgba(229,171,40,0.95))"
+            ? "drop-shadow(0 0 32px rgba(229,171,40,1))"
             : pressing
-            ? "drop-shadow(0 3px 10px rgba(80,40,10,0.5))"
-            : "drop-shadow(0 8px 22px rgba(80,40,10,0.22))",
-          // 靜止呼吸動效（未敲時）
-          animation: (!pressing && !golden)
+            ? "drop-shadow(0 2px 8px rgba(60,30,5,0.55))"
+            : "drop-shadow(0 10px 28px rgba(60,30,5,0.20))",
+          // idle 浮動（CSS animation 在按下時關掉）
+          animation: isIdle
             ? (instrument === "bell" ? "bellFloat 5s ease-in-out infinite" : "mokoFloat 4s ease-in-out infinite")
             : "none",
           userSelect: "none",
-          opacity: (instrument === "bell" && bellCooldown) ? 0.75 : 1,
+          opacity: cooldown ? 0.72 : 1,
         }}
       >
         {instrument === "mokugyo"
-          ? <MokyugyoSVG size={svgSize} golden={golden} />
-          : <BellSVG size={svgSize} golden={golden} pressing={pressing} />
+          ? <MokyugyoSVG size={svgSize} golden={golden} idle={isIdle} />
+          : <BellSVG size={svgSize} golden={golden} pressing={pressing} idle={isIdle} />
         }
       </button>
 
-      {/* ── 敲擊漣漪 ── */}
-      {ripple && (
-        <div key={_pid} style={{
+      {/* 敲擊漣漪 */}
+      {showRipple && (
+        <div key={rippleKey} style={{
           position: "absolute",
-          width: "180px", height: "180px",
+          width: `${svgSize * 0.85}px`, height: `${svgSize * 0.85}px`,
           borderRadius: "50%",
-          border: `2px solid ${golden ? "#e5ab28" : "rgba(201,138,22,0.5)"}`,
-          animation: "rippleOut 0.7s ease-out forwards",
+          border: `2px solid ${golden ? "#e5ab28" : "rgba(201,138,22,0.55)"}`,
+          animation: "rippleOut 0.75s ease-out forwards",
           pointerEvents: "none", zIndex: 8,
         }} />
       )}
 
-      {/* ── 首次提示（第 0 次）── */}
-      {count === 0 && (
+      {/* 首次提示箭頭 + 文字 */}
+      {count === 0 && !pressing && (
         <div style={{
-          marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.5rem",
-          animation: "bounceHint 1.8s ease-in-out infinite", zIndex: 10,
+          marginTop: "0.6rem", display: "flex", alignItems: "center", gap: "0.5rem",
+          zIndex: 10, animation: "pulseHint 1.6s ease-in-out infinite",
         }}>
-          <span style={{ fontSize: "1.8rem" }}>👆</span>
-          <span style={{ fontFamily: "'Noto Sans SC', sans-serif", fontSize: "1rem", color: "#a06810" }}>
+          <span style={{ fontSize: "2rem" }}>👆</span>
+          <span style={{ fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif", fontSize: "1.05rem", color: "#a06810", fontWeight: 500 }}>
             {instrument === "bell" ? "敲！" : "點我！"}
           </span>
         </div>
       )}
 
-      {/* ── 鐘冷卻提示 ── */}
-      {instrument === "bell" && bellCooldown && (
+      {/* 銅鐘餘音提示 */}
+      {instrument === "bell" && cooldown && (
         <p style={{
-          marginTop: "0.75rem", zIndex: 10,
-          fontFamily: "'Noto Sans SC', sans-serif",
-          fontSize: "0.85rem", color: "#a06810",
+          marginTop: "0.6rem", zIndex: 10,
+          fontFamily: "'Noto Sans SC',sans-serif", fontSize: "0.88rem", color: "#a06810",
           animation: "fadeIn 0.3s ease",
-        }}>
-          🔔 靜聽鐘聲…
-        </p>
+        }}>🔔 靜聽鐘聲…</p>
       )}
 
-      {/* ── 計數器 ── */}
+      {/* 計數器 */}
       {count > 0 && (
-        <div style={{
-          marginTop: instrument === "bell" ? "0.75rem" : "1rem",
-          zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem",
-        }}>
+        <div style={{ marginTop: "0.65rem", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.15rem" }}>
           <span style={{
-            fontFamily: "'Noto Serif TC', 'Noto Serif SC', serif",
-            fontSize: "clamp(2.8rem, 11vw, 4.5rem)",
-            fontWeight: 700, color: golden ? "#c98a16" : "#2c1810", lineHeight: 1,
-            transition: "color 0.5s",
-            textShadow: golden ? "0 0 20px rgba(229,171,40,0.5)" : "none",
-          }}>
-            {count}
-          </span>
-          <span style={{ fontFamily: "'Noto Sans SC',sans-serif", fontSize: "0.85rem", color: "#a06810", letterSpacing: "0.2em" }}>
-            聲
-          </span>
+            fontFamily: "'Noto Serif TC','Noto Serif SC',serif",
+            fontSize: "clamp(2.6rem, 11vw, 4.2rem)", fontWeight: 700,
+            color: golden ? "#c98a16" : "#2c1810", lineHeight: 1,
+            textShadow: golden ? "0 0 22px rgba(229,171,40,0.55)" : "none",
+            transition: "color 0.5s, text-shadow 0.5s",
+          }}>{count}</span>
+          <span style={{ fontFamily: "'Noto Sans SC',sans-serif", fontSize: "0.82rem", color: "#a06810", letterSpacing: "0.22em" }}>聲</span>
           {count < 108 && (
-            <div style={{ width: "140px", marginTop: "0.35rem" }}>
+            <div style={{ width: "130px", marginTop: "0.3rem" }}>
               <div style={{ height: "3px", background: "rgba(201,138,22,0.18)", borderRadius: "2px", overflow: "hidden" }}>
-                <div style={{
-                  height: "100%", borderRadius: "2px",
-                  width: `${Math.min((count / 108) * 100, 100)}%`,
-                  background: "linear-gradient(to right, #e5ab28, #c98a16)",
-                  transition: "width 0.3s ease",
-                }} />
+                <div style={{ height: "100%", width: `${Math.min((count / 108) * 100, 100)}%`, background: "linear-gradient(to right, #e5ab28, #c98a16)", borderRadius: "2px", transition: "width 0.3s" }} />
               </div>
-              <div style={{ textAlign: "right", fontSize: "0.7rem", color: "#bc8f5e", marginTop: "0.2rem", fontFamily: "'Noto Sans SC',sans-serif" }}>
-                {count}/108
-              </div>
+              <div style={{ textAlign: "right", fontSize: "0.68rem", color: "#bc8f5e", marginTop: "0.18rem", fontFamily: "'Noto Sans SC',sans-serif" }}>{count}/108</div>
             </div>
           )}
         </div>
       )}
 
-      {/* ── 向下滾動提示 ── */}
+      {/* 向下滾動提示（敲 3 下後出現） */}
       {count >= 3 && (
         <div style={{
-          position: "absolute", bottom: "1.2rem", left: "50%",
-          transform: "translateX(-50%)",
+          position: "absolute", bottom: "1rem", left: "50%", transform: "translateX(-50%)",
           display: "flex", flexDirection: "column", alignItems: "center", gap: "0.2rem",
-          zIndex: 10, opacity: 0.55, animation: "fadeInUp 1s ease 0.8s both",
+          zIndex: 10, opacity: 0.5, animation: "fadeInUp 1s ease 1s both",
         }}>
-          <span style={{ fontFamily: "'Noto Sans SC',sans-serif", fontSize: "0.75rem", color: "#a06810" }}>
-            向下探索更多
-          </span>
-          <span style={{ fontSize: "1rem", animation: "bounceDown 2s ease-in-out infinite" }}>↓</span>
+          <span style={{ fontFamily: "'Noto Sans SC',sans-serif", fontSize: "0.72rem", color: "#a06810" }}>向下探索更多</span>
+          <span style={{ fontSize: "0.9rem", animation: "bounceDown 2s ease-in-out infinite" }}>↓</span>
         </div>
       )}
     </div>
-  );
-}
-
-
-// ── 飄字粒子組件 ──────────────────────────────────────────────────
-function FloatingChar({ particle: p }: { particle: FloatParticle }) {
-  return (
-    <div style={{
-      position: "absolute",
-      left: `${p.x}%`,
-      bottom: "42%",
-      fontSize: `${p.size}px`,
-      color: p.color,
-      fontFamily: "'Noto Serif TC', 'Noto Serif SC', serif",
-      fontWeight: 600,
-      pointerEvents: "none",
-      zIndex: 5,
-      animation: `floatUp ${p.duration}ms ease-out ${p.delay}ms both`,
-      transform: `rotate(${p.rotate}deg)`,
-      opacity: 0,
-      whiteSpace: "nowrap",
-      textShadow: "0 1px 6px rgba(201,138,22,0.25)",
-    }}>
-      {p.text}
-    </div>
-  );
-}
-
-// ── 木魚 SVG ──────────────────────────────────────────────────────
-function MokyugyoSVG({ size = 210, golden = false }: { size?: number; golden?: boolean }) {
-  const body   = golden ? "#c98a16" : "#7B3A10";
-  const shadow = golden ? "#9a6010" : "#4A2008";
-  const shine  = golden ? "#f5d060" : "#C4622A";
-  const eye    = golden ? "#fff8e1" : "#FFF3E0";
-
-  return (
-    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* 靜止呼吸光暈 */}
-      <ellipse cx="100" cy="112" rx="78" ry="64"
-        fill="rgba(201,138,22,0.07)"
-        style={{ animation: "mokoGlow 4s ease-in-out infinite" }} />
-
-      {/* 陰影 */}
-      <ellipse cx="103" cy="118" rx="68" ry="55" fill="rgba(0,0,0,0.13)" />
-      {/* 主體 */}
-      <ellipse cx="100" cy="112" rx="68" ry="55" fill={body} />
-      {/* 高光 */}
-      <ellipse cx="84" cy="88" rx="32" ry="20" fill={shine} opacity="0.38" />
-      {/* 中縫 */}
-      <path d="M100 60 C93 76,91 90,92 112 C93 132,95 143,100 155 C105 143,107 132,108 112 C109 90,107 76,100 60Z"
-        fill={shadow} opacity="0.82" />
-      <path d="M100 65 C98 77,97 90,97.5 112 C98 132,99 141,100 153"
-        stroke={shine} strokeWidth="1.5" opacity="0.45" strokeLinecap="round" />
-      {/* 左眼 */}
-      <ellipse cx="71" cy="98" rx="9" ry="10" fill={shadow} />
-      <ellipse cx="71" cy="98" rx="6" ry="7" fill={eye} />
-      <ellipse cx="72" cy="97" rx="2.5" ry="3" fill={shadow} />
-      <ellipse cx="73" cy="96" rx="1" ry="1" fill="white" opacity="0.9" />
-      {/* 右眼 */}
-      <ellipse cx="129" cy="98" rx="9" ry="10" fill={shadow} />
-      <ellipse cx="129" cy="98" rx="6" ry="7" fill={eye} />
-      <ellipse cx="130" cy="97" rx="2.5" ry="3" fill={shadow} />
-      <ellipse cx="131" cy="96" rx="1" ry="1" fill="white" opacity="0.9" />
-      {/* 嘴（微笑） */}
-      <path d="M87 128 Q100 138 113 128" stroke={shadow} strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      {/* 頂部榫頭 */}
-      <rect x="89" y="40" width="22" height="22" rx="5" fill={shadow} />
-      <rect x="92" y="37" width="16" height="9" rx="4" fill={body} />
-      <rect x="94" y="35" width="12" height="7" rx="3" fill={shine} opacity="0.55" />
-      {/* 木棰 */}
-      <g transform="translate(150,30) rotate(38)">
-        <ellipse cx="0" cy="0" rx="12" ry="10" fill={shadow} />
-        <ellipse cx="-2" cy="-2" rx="7" ry="6" fill={shine} opacity="0.45" />
-        <rect x="-3.5" y="9" width="7" height="40" rx="3.5" fill={golden ? "#9a6010" : "#5A2E10"} />
-        <rect x="-1.5" y="11" width="3" height="36" rx="2" fill={shine} opacity="0.28" />
-      </g>
-    </svg>
-  );
-}
-
-// ── 銅鐘 SVG ──────────────────────────────────────────────────────
-function BellSVG({ size = 210, golden = false, pressing = false }: { size?: number; golden?: boolean; pressing?: boolean }) {
-  const body   = golden ? "#c98a16" : "#8B6914";
-  const shadow = golden ? "#9a6010" : "#5C4209";
-  const shine  = golden ? "#f5d060" : "#D4A832";
-  const rim    = golden ? "#a06810" : "#6B4E0A";
-
-  return (
-    <svg width={size} height={size * 1.05} viewBox="0 0 200 210" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* 鐘繩/掛鉤 */}
-      <rect x="96" y="8" width="8" height="22" rx="4" fill={shadow} />
-      <ellipse cx="100" cy="8" rx="10" ry="6" fill={shadow} />
-      <ellipse cx="100" cy="8" rx="7" ry="4" fill={shine} opacity="0.5" />
-
-      {/* 鐘身陰影 */}
-      <path d="M42 155 Q40 170 100 178 Q160 170 158 155 L152 72 Q148 40 100 38 Q52 40 48 72 Z"
-        fill="rgba(0,0,0,0.14)" transform="translate(2,4)" />
-
-      {/* 鐘身主體 */}
-      <path d="M42 155 Q40 168 100 176 Q160 168 158 155 L152 72 Q148 40 100 38 Q52 40 48 72 Z"
-        fill={body} />
-
-      {/* 鐘身高光（左側） */}
-      <path d="M58 70 Q56 100 60 140 Q70 105 68 68 Z" fill={shine} opacity="0.30" />
-
-      {/* 裝飾橫紋 */}
-      {[90, 110, 130].map((y, i) => (
-        <path key={i}
-          d={`M${52 + i * 2} ${y} Q100 ${y + 3} ${148 - i * 2} ${y}`}
-          stroke={shadow} strokeWidth="2" fill="none" opacity="0.5" />
-      ))}
-
-      {/* 蓮花紋飾（中央） */}
-      <circle cx="100" cy="112" r="16" fill="none" stroke={shine} strokeWidth="1.5" opacity="0.55" />
-      <text x="100" y="118" textAnchor="middle" fontSize="16" fill={shine} opacity="0.7"
-        fontFamily="serif">佛</text>
-
-      {/* 鐘口邊緣（加厚） */}
-      <path d="M38 155 Q36 175 100 182 Q164 175 162 155 L158 152 Q155 170 100 177 Q45 170 42 152 Z"
-        fill={rim} />
-      <path d="M42 155 Q40 168 100 176 Q160 168 158 155" stroke={shine} strokeWidth="1.5" fill="none" opacity="0.4" />
-
-      {/* 鐘鐘槌（敲擊時略偏） */}
-      <g transform={`translate(${pressing ? 148 : 152}, 112) rotate(${pressing ? -15 : -25})`}>
-        <rect x="-3" y="-30" width="6" height="35" rx="3" fill={shadow} />
-        <ellipse cx="0" cy="-30" rx="8" ry="7" fill={shadow} />
-        <ellipse cx="-2" cy="-32" rx="5" ry="4" fill={shine} opacity="0.4" />
-        <rect x="-1.5" y="-28" width="3" height="30" rx="1.5" fill={shine} opacity="0.2" />
-      </g>
-
-      {/* 金光模式：外圈光環 */}
-      {golden && (
-        <ellipse cx="100" cy="110" rx="90" ry="80"
-          fill="none" stroke="#e5ab28" strokeWidth="4" opacity="0.25" />
-      )}
-    </svg>
   );
 }

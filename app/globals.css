@@ -255,32 +255,64 @@
 
 /* 木魚靜止呼吸浮動 */
 @keyframes mokoFloat {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  30%       { transform: translateY(-6px) rotate(0.8deg); }
-  70%       { transform: translateY(-3px) rotate(-0.5deg); }
+  0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+  30%       { transform: translateY(-9px) rotate(1deg) scale(1.01); }
+  70%       { transform: translateY(-5px) rotate(-0.6deg) scale(1.005); }
 }
 
 /* 銅鐘靜止搖曳 */
 @keyframes bellFloat {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
-  25%       { transform: translateY(-5px) rotate(1.2deg); }
-  75%       { transform: translateY(-2px) rotate(-0.8deg); }
+  25%       { transform: translateY(-8px) rotate(1.5deg); }
+  75%       { transform: translateY(-4px) rotate(-1deg); }
 }
 
-/* 木魚光暈呼吸 */
+/* 木魚/鐘體內光暈呼吸 */
 @keyframes mokoGlow {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50%       { opacity: 1.0; transform: scale(1.12); }
+  0%, 100% { opacity: 0.5; transform: scale(0.95); }
+  50%       { opacity: 1.0; transform: scale(1.15); }
 }
 
-/* 背景光環呼吸 */
+/* 背景大光環 */
 @keyframes heroGlow {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%       { opacity: 1.2; transform: scale(1.25); }
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1.1; transform: scale(1.3); }
 }
 
-/* 敲擊漣漪擴散 */
+/* 敲擊漣漪 */
 @keyframes rippleOut {
-  0%   { transform: scale(0.4); opacity: 0.8; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0%   { transform: scale(0.35); opacity: 0.9; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* 眼睛眨眼 */
+@keyframes eyeBlink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  95%           { transform: scaleY(0.08); }
+}
+
+/* 木棰搖擺（吸引點擊） */
+@keyframes malletSwing {
+  0%, 100% { transform: rotate(28deg); }
+  40%       { transform: rotate(52deg); }
+  60%       { transform: rotate(22deg); }
+}
+
+/* 鐘槌搖擺 */
+@keyframes malletSwingBell {
+  0%, 100% { transform: rotate(-22deg); }
+  45%       { transform: rotate(-6deg); }
+  65%       { transform: rotate(-28deg); }
+}
+
+/* 粒子光點環繞 */
+@keyframes orbitRing {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* 提示箭頭脈衝 */
+@keyframes pulseHint {
+  0%, 100% { transform: scale(1);    opacity: 1;   }
+  50%       { transform: scale(1.12); opacity: 0.7; }
 }

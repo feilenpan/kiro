@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body style={{ minHeight: "100vh", backgroundColor: "#f5f0e8" }}>
+      <body style={{ minHeight: "100vh", backgroundColor: "#f5f0e8", overflowX: "hidden" }}>
         <LocaleProvider>
           {children}
           <PWAInstallPrompt />
