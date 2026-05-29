@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+SC:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -17,8 +17,7 @@
   body {
     background-color: #f5f0e8;
     color: #2c1810;
-    font-family: 'Noto Serif SC', Georgia, serif;
-    /* 防止任何子元素橫向溢出撐破頁面 */
+    font-family: 'Noto Serif TC', 'Noto Serif SC', Georgia, serif;
     overflow-x: hidden;
   }
 
@@ -29,7 +28,7 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Noto Serif SC', Georgia, serif;
+    font-family: 'Noto Serif TC', 'Noto Serif SC', Georgia, serif;
     color: #2c1810;
   }
 }
@@ -250,4 +249,38 @@
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateX(-50%) translateY(12px); }
   to   { opacity: 0.6; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── 木魚/鐘 專用動畫 ─────────────────────────────────────────── */
+
+/* 木魚靜止呼吸浮動 */
+@keyframes mokoFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  30%       { transform: translateY(-6px) rotate(0.8deg); }
+  70%       { transform: translateY(-3px) rotate(-0.5deg); }
+}
+
+/* 銅鐘靜止搖曳 */
+@keyframes bellFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25%       { transform: translateY(-5px) rotate(1.2deg); }
+  75%       { transform: translateY(-2px) rotate(-0.8deg); }
+}
+
+/* 木魚光暈呼吸 */
+@keyframes mokoGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1.0; transform: scale(1.12); }
+}
+
+/* 背景光環呼吸 */
+@keyframes heroGlow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1.2; transform: scale(1.25); }
+}
+
+/* 敲擊漣漪擴散 */
+@keyframes rippleOut {
+  0%   { transform: scale(0.4); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
 }

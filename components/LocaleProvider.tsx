@@ -9,7 +9,7 @@ const LocaleContext = createContext<LocaleCtx>({ variant: "SC", toggle: () => {}
 export function useLocale(): LocaleCtx { return useContext(LocaleContext); }
 
 export default function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [variant, setVariant] = useState<FontVariant>("SC");
+  const [variant, setVariant] = useState<FontVariant>("TC");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
