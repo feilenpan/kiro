@@ -1,53 +1,30 @@
-import Link from "next/link";
 import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import ChatInterface from "@/components/ChatInterface";
 import { FeatureCards, SutraCategories } from "@/components/FeatureCards";
-import { getTodaySutra, getDailyAudioUrl } from "@/lib/sutras";
+import MokyugyoHero from "@/components/MokyugyoHero";
+import { getTodaySutra, getTodayAISutra, getDailyAudioUrl } from "@/lib/sutras";
 
-export default function HomePage() {
-  // Server Component：在服務端拼好 R2 URL，傳給客戶端組件
-  const todaySutra  = getTodaySutra();
-  const dailyAudio  = getDailyAudioUrl(); // R2 未配置時返回 null
+export default async function HomePage() {
+  const aiSutra    = await getTodayAISutra();
+  const todaySutra = aiSutra ?? getTodaySutra();
+  const dailyAudio = getDailyAudioUrl();
 
   return (
     <>
       <Header />
-      <main style={{ maxWidth: "900px", margin: "0 auto", padding: "1.5rem 1.25rem 4rem" }}>
 
-        <section style={{ textAlign: "center", padding: "1.75rem 0 1.5rem" }}>
-          <div className="float-gentle" style={{ fontSize: "3.5rem", marginBottom: "0.75rem" }}>☸️</div>
-          <h1 style={{
-            fontFamily: "'Noto Serif SC', serif",
-            fontSize: "clamp(1.8rem, 8vw, 3rem)", fontWeight: 700,
-            color: "#2c1810", marginBottom: "0.75rem", letterSpacing: "0.15em",
-          }}>
-            佛說
-          </h1>
-          <p style={{
-            fontFamily: "'Noto Sans SC', sans-serif",
-            fontSize: "clamp(0.95rem, 3vw, 1.1rem)",
-            color: "#8a5a2f", lineHeight: 1.8, maxWidth: "480px", margin: "0 auto 1.5rem",
-          }}>
-            以 AI 之力，弘扬佛法智慧<br />
-            每日金句 · 问佛解惑 · 佛经朗诵
-          </p>
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/ask">
-              <button className="btn-gold" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
-                🙏 向AI问佛
-              </button>
-            </Link>
-            <Link href="/sutras">
-              <button className="btn-outline" style={{ fontSize: "1rem", padding: "0.75rem 1.5rem" }}>
-                📖 浏览佛经
-              </button>
-            </Link>
-          </div>
-        </section>
+      {/* ── 第一屏：木魚互動區 ── */}
+      <MokyugyoHero />
 
-        {/* 今日金句 — 傳入服務端已解析的 R2 URL */}
+      {/* ── 第二屏以下：原有功能 ── */}
+      <main style={{ maxWidth: "900px", margin: "0 auto", padding: "0 1.25rem 4rem" }}>
+
+        {/* 今日金句 */}
         <section style={{ marginBottom: "2.5rem" }}>
+          <div className="lotus-divider">
+            <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>今日金句</span>
+          </div>
           <DailySutraCard sutra={todaySutra} audioUrl={dailyAudio} />
         </section>
 
@@ -69,7 +46,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 佛經典籍分類 */}
+        {/* 佛經典籍 */}
         <section>
           <div className="lotus-divider">
             <span style={{ fontSize: "1.2rem", color: "#c98a16" }}>佛经典籍</span>

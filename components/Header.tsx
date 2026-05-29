@@ -12,6 +12,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/",        label: "首页",   icon: "🏠" },
+  { href: "/#mokugyo", label: "木鱼",  icon: "🪘" },
   { href: "/ask",     label: "问佛",   icon: "🙏" },
   { href: "/sutras",  label: "佛经",   icon: "📖" },
   { href: "/daily",   label: "每日",   icon: "☀️" },
