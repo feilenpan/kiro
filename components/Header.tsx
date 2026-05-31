@@ -82,7 +82,7 @@ export default function Header() {
           </nav>
 
           {/* 手機端右側 */}
-          <div className="show-mobile" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div className="show-mobile" style={{ alignItems: "center", gap: "0.5rem" }}>
             <button
               onClick={toggle}
               title={variant === "TC" ? "切換簡體（普通話朗讀）" : "切換繁體（粵語朗讀）"}
