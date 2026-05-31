@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { rateLimit, getClientIP } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIP } from "@/lib/rate-limit";
 import {
   getMemory,
   appendTurn,
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
   try {
     // ── Rate Limiting：每 IP 每分鐘最多 10 次 ────────────────────
     const ip = getClientIP(request);
-    const limit = rateLimit(ip, 10, 60 * 1000);
+    const limit = await checkRateLimit(ip, 10, 60 * 1000);
     if (!limit.allowed) {
       return NextResponse.json(
         { reply: "您的提問過於頻繁，請稍作休息後再試。阿彌陀佛。🙏" },

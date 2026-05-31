@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AudioPlayer from "./AudioPlayer";
+import ShareButton from "./ShareButton";
 import { DailySutra } from "@/lib/sutras";
 import { track, events } from "@/lib/analytics";
 
@@ -91,6 +92,7 @@ export default function DailySutraCard({ sutra, audioUrl }: DailySutraCardProps)
         >
           {showExplanation ? "收起" : "📖 解讀"}
         </button>
+        <ShareButton text={sutra.text} source={sutra.source} explanation={sutra.explanation} />
       </div>
 
       {/* 白話解釋 */}
