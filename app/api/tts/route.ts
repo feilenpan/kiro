@@ -6,14 +6,29 @@ import { createHash } from "crypto";
 const MINIMAX_TTS_URL = "https://api.minimaxi.com/v1/t2a_v2";
 
 // speech-2.8-hd 支持的 voice_id 列表
-// 參考：https://platform.minimax.io/docs/api-reference/voice-management-get
-const VOICES = [
-  { id: "female-shaonv",  name: "少女音（清澈寧靜）",   gender: "female", default: true  },
-  { id: "female-yujie",   name: "御姐音（沉穩大氣）",   gender: "female", default: false },
-  { id: "female-tianmei", name: "甜美音（溫柔親切）",   gender: "female", default: false },
-  { id: "male-qinchen",   name: "青沉音（低沉穩重）",   gender: "male",   default: false },
-  { id: "male-jingying",  name: "精英音（莊重有力）",   gender: "male",   default: false },
+const VOICES_MANDARIN = [
+  { id: "female-shaonv",  name: "少女音（清澈寧靜）", gender: "female", lang: "zh", default: true  },
+  { id: "female-yujie",   name: "御姐音（沉穩大氣）", gender: "female", lang: "zh", default: false },
+  { id: "female-tianmei", name: "甜美音（溫柔親切）", gender: "female", lang: "zh", default: false },
+  { id: "male-qinchen",   name: "青沉音（低沉穩重）", gender: "male",   lang: "zh", default: false },
+  { id: "male-jingying",  name: "精英音（莊重有力）", gender: "male",   lang: "zh", default: false },
 ];
+
+// 粵語聲線（MiniMax speech-2.8-hd 原生支持）
+const VOICES_CANTONESE = [
+  { id: "Cantonese_ProfessionalHost",   name: "專業女主持（莊重）", gender: "female", lang: "yue", default: true  },
+  { id: "Cantonese_GentleLady",         name: "溫柔女聲（親切）",   gender: "female", lang: "yue", default: false },
+  { id: "Cantonese_ProfessionalHost_M", name: "專業男主持（莊重）", gender: "male",   lang: "yue", default: false },
+  { id: "Cantonese_PlayfulMan",         name: "活潑男聲",           gender: "male",   lang: "yue", default: false },
+  { id: "Cantonese_CuteGirl",           name: "可愛女孩",           gender: "female", lang: "yue", default: false },
+  { id: "Cantonese_KindWoman",          name: "善良女聲",           gender: "female", lang: "yue", default: false },
+];
+
+const VOICES = [...VOICES_MANDARIN, ...VOICES_CANTONESE];
+
+// 預設聲線：普通話 → 御姐音；粵語 → 專業女主持
+const DEFAULT_VOICE_ZH  = "female-yujie";
+const DEFAULT_VOICE_YUE = "Cantonese_ProfessionalHost";
 
 // ── 服務端音頻緩存 ────────────────────────────────────────────────
 // 結構：cacheKey → { buf: Buffer; expiresAt: number }
@@ -102,9 +117,8 @@ export async function POST(request: NextRequest) {
   try {
     const {
       text,
-      voice_id = "female-shaonv",
-      // isStatic=true：固定內容（金句/佛經），永久緩存，節省 token
-      // isStatic=false（預設）：動態 AI 回答，緩存 1 小時
+      voice_id,          // 可選，不傳則根據 lang 自動選預設聲線
+      lang = "zh",       // "zh" = 普通話，"yue" = 粵語
       isStatic = false,
     } = await request.json();
 
@@ -112,8 +126,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "請提供文字" }, { status: 400 });
     }
 
+    // 根據語言選預設聲線（若前端沒有明確指定 voice_id）
+    const resolvedVoiceId: string = voice_id ??
+      (lang === "yue" ? DEFAULT_VOICE_YUE : DEFAULT_VOICE_ZH);
+
     const truncatedText = text.slice(0, 500);
-    const cacheKey      = getCacheKey(truncatedText, voice_id);
+    const cacheKey      = getCacheKey(truncatedText, resolvedVoiceId);
 
     // 1️⃣ 命中緩存 → 直接回傳，零 token 消耗
     const cached = getFromCache(cacheKey);
@@ -135,7 +153,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3️⃣ 調用 MiniMax TTS
-    const audioBuffer = await callMiniMaxTTS(truncatedText, voice_id, apiKey);
+    const audioBuffer = await callMiniMaxTTS(truncatedText, resolvedVoiceId, apiKey);
     if (!audioBuffer) {
       return NextResponse.json({ fallback: true }, { status: 200 });
     }

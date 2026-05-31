@@ -110,14 +110,14 @@ export async function compressSummaryIfNeeded(
     const client = new OpenAI({ apiKey, baseURL });
 
     const historyText = memory.recentTurns
-      .map((t) => `${t.role === "user" ? "用户" : "法师"}：${t.content}`)
+      .map((t) => `${t.role === "user" ? "用戶" : "法師"}：${t.content}`)
       .join("\n");
 
     const prevSummary = memory.summary
       ? `之前的了解：${memory.summary}\n\n`
       : "";
 
-    const prompt = `${prevSummary}以下是最近的对话记录：\n${historyText}\n\n请用100字以内，以第三人称简洁概括这位用户的基本情况、主要烦恼和修行偏好，供AI法师下次对话参考。只输出概括内容，不要加任何前缀。`;
+    const prompt = `${prevSummary}以下是最近的對話記錄：\n${historyText}\n\n請用100字以內，以第三人稱簡潔概括這位用戶的基本情況、主要煩惱和修行偏好，供AI下次對話參考。只輸出概括內容，不要加任何前綴。請用繁體中文輸出。`;
 
     const res = await client.chat.completions.create({
       model: "MiniMax-M2.5",
@@ -144,14 +144,14 @@ export function buildMemoryContext(memory: UserMemory | null): string {
   if (!memory) return "";
   if (!memory.summary && memory.recentTurns.length === 0) return "";
 
-  const lines: string[] = ["【关于这位施主的了解】"];
+  const lines: string[] = ["【關於這位用戶的了解】"];
 
   if (memory.summary) {
     lines.push(memory.summary);
   }
 
   if (memory.totalTurns > 0) {
-    lines.push(`（已陪伴 ${memory.totalTurns} 轮对话）`);
+    lines.push(`（已陪伴 ${memory.totalTurns} 輪對話）`);
   }
 
   return lines.join("\n");

@@ -288,7 +288,7 @@ export default function ChatInterface() {
                 <div style={{ marginTop: "0.5rem", paddingLeft: "0.25rem" }}>
                   <AudioPlayer
                     text={msg.content}
-                    label="聆听回答"
+                    label="聆聽回答"
                     size="sm"
                     isStatic={false}
                     trackEvent={events.LISTEN_AI}

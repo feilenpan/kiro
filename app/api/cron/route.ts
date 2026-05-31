@@ -29,7 +29,7 @@ export function dailyQuoteKey(date?: Date): string {
 // ── AI 生成金句 ────────────────────────────────────────────────────
 async function generateDailyQuote(apiKey: string): Promise<DailySutra | null> {
   const today = new Date();
-  const dateStr = today.toLocaleDateString("zh-CN", {
+  const dateStr = today.toLocaleDateString("zh-TW", {
     month: "long", day: "numeric", weekday: "long",
   });
 

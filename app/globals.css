@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+SC:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+/* 字體已由 app/layout.tsx 的 <link> 統一加載，此處不重複 @import */
 
 @tailwind base;
 @tailwind components;

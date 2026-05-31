@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import DailySutraCard from "@/components/DailySutraCard";
 import AudioPlayer from "@/components/AudioPlayer";
@@ -12,7 +12,14 @@ function MeditationTimer() {
   const [duration,   setDuration]   = useState(10);
   const [timeLeft,   setTimeLeft]   = useState<number | null>(null);
   const [isRunning,  setIsRunning]  = useState(false);
-  const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 組件卸載時清理 interval，防止內存洩漏
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const start = () => {
     if (isRunning) return;
@@ -24,6 +31,7 @@ function MeditationTimer() {
       setTimeLeft((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(id);
+          intervalRef.current = null;
           setIsRunning(false);
           track(events.MEDITATE_DONE, { duration });
           if (window.speechSynthesis) {
@@ -36,11 +44,14 @@ function MeditationTimer() {
         return prev - 1;
       });
     }, 1000);
-    setIntervalId(id);
+    intervalRef.current = id;
   };
 
   const stop = () => {
-    if (intervalId) clearInterval(intervalId);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     setIsRunning(false);
     setTimeLeft(null);
   };
