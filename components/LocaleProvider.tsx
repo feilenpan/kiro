@@ -1,53 +1,57 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { type FontVariant, detectFontVariant, saveFontVariant, getFontsUrl, getSerifFont, getSansFont } from "@/lib/locale";
-
-const CANTONESE_KEY = "foshuo_cantonese";
+import {
+  type FontVariant,
+  detectFontVariant,
+  saveFontVariant,
+  getFontsUrl,
+  getSerifFont,
+  getSansFont,
+} from "@/lib/locale";
 
 interface LocaleCtx {
   variant: FontVariant;
   toggle: () => void;
-  cantonese: boolean;           // 是否使用粵語朗讀
-  toggleCantonese: () => void;  // 切換粵語/普通話
+  /** 粵語朗讀：自動由 variant 決定，TC = 粵語，SC = 普通話，無需手動設定 */
+  cantonese: boolean;
 }
+
 const LocaleContext = createContext<LocaleCtx>({
-  variant: "TC", toggle: () => {},
-  cantonese: true, toggleCantonese: () => {},
+  variant: "TC",
+  toggle: () => {},
+  cantonese: true,   // 預設 TC → 粵語
 });
 
-export function useLocale(): LocaleCtx { return useContext(LocaleContext); }
+export function useLocale(): LocaleCtx {
+  return useContext(LocaleContext);
+}
 
 export default function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [variant,    setVariant]    = useState<FontVariant>("TC");
-  // 預設粵語（true），除非用戶曾主動切換為普通話（localStorage 存 "0"）
-  const [cantonese,  setCantonese]  = useState(true);
-  const [mounted,    setMounted]    = useState(false);
+  // 預設繁體（TC），客戶端掛載後改用瀏覽器語言偵測結果
+  const [variant, setVariant] = useState<FontVariant>("TC");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setVariant(detectFontVariant());
-    try {
-      const saved = localStorage.getItem(CANTONESE_KEY);
-      // 未設置過（null）→ 保持預設粵語 true
-      // 已設置過 → 以用戶選擇為準
-      if (saved !== null) setCantonese(saved === "1");
-    } catch { /**/ }
     setMounted(true);
   }, []);
 
+  // variant 變化時同步字體、lang 屬性
   useEffect(() => {
     if (!mounted) return;
     const LINK_ID = "dynamic-fonts";
     let link = document.getElementById(LINK_ID) as HTMLLinkElement | null;
     if (!link) {
       link = document.createElement("link");
-      link.id = LINK_ID; link.rel = "stylesheet";
+      link.id = LINK_ID;
+      link.rel = "stylesheet";
       document.head.appendChild(link);
     }
     link.href = getFontsUrl(variant);
     const root = document.documentElement;
     root.style.setProperty("--font-serif", getSerifFont(variant));
-    root.style.setProperty("--font-sans",  getSansFont(variant));
+    root.style.setProperty("--font-sans", getSansFont(variant));
     root.lang = variant === "SC" ? "zh-CN" : "zh-TW";
   }, [variant, mounted]);
 
@@ -59,16 +63,11 @@ export default function LocaleProvider({ children }: { children: React.ReactNode
     });
   }, []);
 
-  const toggleCantonese = useCallback(() => {
-    setCantonese((prev) => {
-      const next = !prev;
-      try { localStorage.setItem(CANTONESE_KEY, next ? "1" : "0"); } catch { /**/ }
-      return next;
-    });
-  }, []);
+  // 粵語完全由 variant 決定：TC = 粵語，SC = 普通話
+  const cantonese = variant === "TC";
 
   return (
-    <LocaleContext.Provider value={{ variant, toggle, cantonese, toggleCantonese }}>
+    <LocaleContext.Provider value={{ variant, toggle, cantonese }}>
       {children}
     </LocaleContext.Provider>
   );

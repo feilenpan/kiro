@@ -16,33 +16,16 @@ const navItems: NavItem[] = [
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { variant, toggle, cantonese, toggleCantonese } = useLocale();
+  const { variant, toggle } = useLocale();
 
-  // 粵語切換按鈕樣式（高亮 = 已啟用）
-  const cantoneseStyle = (active: boolean) => ({
-    padding: "0.4rem 0.65rem",
-    borderRadius: "0.5rem",
-    border: "1px solid rgba(201, 138, 22, 0.35)",
-    background: active
-      ? "linear-gradient(to bottom, #e5ab28, #c98a16)"
-      : "rgba(249, 237, 204, 0.6)",
-    color: active ? "white" : "#7a4c10",
-    cursor: "pointer",
-    fontSize: "0.82rem",
-    fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
-    fontWeight: active ? 600 : 400,
-    transition: "all 0.2s",
-    whiteSpace: "nowrap" as const,
-  });
-
-  const variantStyle = {
-    padding: "0.4rem 0.65rem",
+  const btnStyle = {
+    padding: "0.4rem 0.75rem",
     borderRadius: "0.5rem",
     border: "1px solid rgba(201, 138, 22, 0.3)",
     background: "rgba(249, 237, 204, 0.6)",
     color: "#7a4c10",
     cursor: "pointer",
-    fontSize: "0.82rem",
+    fontSize: "0.85rem",
     fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
     transition: "all 0.2s",
   };
@@ -88,42 +71,30 @@ export default function Header() {
               </Link>
             ))}
 
-            {/* 語音語言切換：粵語 / 普通話 */}
-            <div style={{ display: "flex", gap: "0.25rem", marginLeft: "0.5rem", alignItems: "center" }}>
-              <button onClick={() => { if (!cantonese) toggleCantonese(); }}
-                title="粵語朗讀" style={cantoneseStyle(cantonese)}>
-                🔊 粵
-              </button>
-              <button onClick={() => { if (cantonese) toggleCantonese(); }}
-                title="普通話朗讀" style={cantoneseStyle(!cantonese)}>
-                🔊 普
-              </button>
-            </div>
-
-            {/* 繁簡切換 */}
-            <button onClick={toggle} title={variant === "SC" ? "切換到繁體" : "切換到簡體"}
-              style={{ ...variantStyle, marginLeft: "0.25rem" }}>
-              {variant === "SC" ? "繁" : "簡"}
+            {/* 繁／簡切換（同時自動切換語音語言） */}
+            <button
+              onClick={toggle}
+              title={variant === "TC" ? "切換簡體（普通話朗讀）" : "切換繁體（粵語朗讀）"}
+              style={{ ...btnStyle, marginLeft: "0.5rem" }}
+            >
+              {variant === "TC" ? "簡" : "繁"}
             </button>
           </nav>
 
-          {/* 手機端右側：粵/普快捷 + 漢堡 */}
-          <div className="show-mobile" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            {/* 粵語快捷切換（點擊在粵/普之間切換） */}
+          {/* 手機端右側 */}
+          <div className="show-mobile" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button
-              onClick={toggleCantonese}
-              title={cantonese ? "切換為普通話" : "切換為粵語"}
-              style={cantoneseStyle(cantonese)}
+              onClick={toggle}
+              title={variant === "TC" ? "切換簡體（普通話朗讀）" : "切換繁體（粵語朗讀）"}
+              style={btnStyle}
             >
-              {cantonese ? "🔊 粵" : "🔊 普"}
+              {variant === "TC" ? "簡" : "繁"}
             </button>
-            <button onClick={toggle} style={variantStyle}>
-              {variant === "SC" ? "繁" : "簡"}
-            </button>
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{
-              background: "none", border: "none", fontSize: "1.5rem",
-              cursor: "pointer", padding: "0.5rem", color: "#2c1810",
-            }} aria-label="菜單">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", padding: "0.5rem", color: "#2c1810" }}
+              aria-label="菜單"
+            >
               {menuOpen ? "✕" : "☰"}
             </button>
           </div>
@@ -148,21 +119,18 @@ export default function Header() {
               </Link>
             ))}
 
-            {/* 菜單內語音選擇區 */}
+            {/* 語言說明 */}
             <div style={{
               borderTop: "1px solid rgba(201,138,22,0.15)",
               marginTop: "0.5rem", paddingTop: "0.75rem",
-              display: "flex", gap: "0.5rem", alignItems: "center",
             }}>
-              <span style={{ fontSize: "0.85rem", color: "#8a5a2f", fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif" }}>
-                朗讀語言：
-              </span>
-              <button onClick={() => { if (!cantonese) toggleCantonese(); }} style={cantoneseStyle(cantonese)}>
-                🔊 粵語
-              </button>
-              <button onClick={() => { if (cantonese) toggleCantonese(); }} style={cantoneseStyle(!cantonese)}>
-                🔊 普通話
-              </button>
+              <p style={{
+                fontSize: "0.82rem", color: "#8a5a2f", margin: 0,
+                fontFamily: "'Noto Sans TC','Noto Sans SC',sans-serif",
+                lineHeight: 1.6,
+              }}>
+                🔊 繁體 → 粵語朗讀 &nbsp;|&nbsp; 簡體 → 普通話朗讀
+              </p>
             </div>
           </div>
         )}
